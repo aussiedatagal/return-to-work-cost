@@ -1,0 +1,581 @@
+import { useState, useMemo, useEffect } from 'react'
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  type ChartOptions,
+  type ChartData
+} from 'chart.js'
+import { Bar } from 'react-chartjs-2'
+import { calculateAfterTaxIncome } from '../utils/taxCalculations'
+import { calculateTotalCosts, type Child } from '../utils/subsidyCalculations'
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+)
+
+// Plugin to add labels over stacked bar segments
+const stackedBarLabelsPlugin = {
+  id: 'stackedBarLabels',
+  afterDatasetsDraw(chart: any) {
+    const { ctx, chartArea } = chart
+    
+    if (!chartArea) return
+    
+    const isMobile = chart.width < 600
+    
+    chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+      const meta = chart.getDatasetMeta(datasetIndex)
+      
+      meta.data.forEach((bar: any, index: number) => {
+        const value = dataset.data[index]
+        if (value === 0 || value === null || value === undefined) return
+        
+        // Calculate the center position of this segment in the stacked bar
+        // In Chart.js v3+, bar.x is the center of the category
+        // bar.width is the width of the bar
+        // So the horizontal center is at bar.x
+        const xPosition = bar.x
+        const yPosition = bar.y + (bar.height / 2)
+        
+        ctx.save()
+        
+        // Set font and text properties BEFORE measuring
+        ctx.font = isMobile ? 'bold 10px sans-serif' : 'bold 11px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillStyle = '#ffffff'
+        ctx.strokeStyle = '#000000'
+        ctx.lineWidth = 2
+        ctx.lineJoin = 'round'
+        ctx.miterLimit = 2
+        
+        // Format label with dataset name and value
+        const labelText = `${dataset.label}: $${Math.round(value).toLocaleString()}`
+        
+        // Draw with black outline for contrast, then white fill
+        ctx.strokeText(labelText, xPosition, yPosition)
+        ctx.fillText(labelText, xPosition, yPosition)
+        
+        ctx.restore()
+      })
+    })
+  }
+}
+
+// Register the plugin
+ChartJS.register(stackedBarLabelsPlugin)
+
+interface SharingChildcareLoadProps {
+  firstParentIncome: number
+  firstParentHoursPerWeek: number
+  secondParentIncome: number
+  secondParentHoursPerWeek: number
+  children: Child[]
+  familyType: 'two-parent' | 'single-parent'
+}
+
+export default function SharingChildcareLoad({
+  firstParentIncome,
+  firstParentHoursPerWeek,
+  secondParentIncome,
+  secondParentHoursPerWeek,
+  children
+}: SharingChildcareLoadProps) {
+  // Calculate full-time equivalent (FTE) income for each parent
+  // Assuming 38 hours/week is full-time
+  const FULL_TIME_HOURS = 38
+  const HOURS_PER_DAY = 7.6
+  
+  const firstParentFTEIncome = firstParentHoursPerWeek > 0 
+    ? (firstParentIncome / firstParentHoursPerWeek) * FULL_TIME_HOURS
+    : firstParentIncome
+  
+  const secondParentFTEIncome = secondParentHoursPerWeek > 0
+    ? (secondParentIncome / secondParentHoursPerWeek) * FULL_TIME_HOURS
+    : secondParentIncome
+  
+  // State for days worked by each parent
+  const [firstParentDays, setFirstParentDays] = useState(() => 
+    Math.round(firstParentHoursPerWeek / HOURS_PER_DAY)
+  )
+  const [secondParentDays, setSecondParentDays] = useState(() => 
+    Math.round(secondParentHoursPerWeek / HOURS_PER_DAY)
+  )
+  
+  // State for days covered by non-parents (grandparents/family) for free
+  const [daysCoveredByNonParents, setDaysCoveredByNonParents] = useState(0)
+  
+  // Calculate pro-rata income based on days worked
+  const firstParentProRataIncome = useMemo(() => {
+    const daysRatio = firstParentDays / 5 // Assuming 5 days is full-time
+    return firstParentFTEIncome * daysRatio
+  }, [firstParentDays, firstParentFTEIncome])
+  
+  const secondParentProRataIncome = useMemo(() => {
+    const daysRatio = secondParentDays / 5
+    return secondParentFTEIncome * daysRatio
+  }, [secondParentDays, secondParentFTEIncome])
+  
+  // Calculate childcare days needed
+  // Total 5 days per week, minus days parents can cover, minus days covered by non-parents
+  const totalDaysNeeded = 5
+  const daysCoveredByParents = firstParentDays < 5 ? (5 - firstParentDays) : 0
+  const daysCoveredBySecondParent = secondParentDays < 5 ? (5 - secondParentDays) : 0
+  // Each parent can cover days they're not working
+  const totalDaysCoveredByParents = Math.min(daysCoveredByParents + daysCoveredBySecondParent, totalDaysNeeded)
+  // Total days covered includes both parents and non-parents (grandparents/family)
+  const totalDaysCovered = Math.min(totalDaysCoveredByParents + daysCoveredByNonParents, totalDaysNeeded)
+  const childcareDaysNeeded = Math.max(0, totalDaysNeeded - totalDaysCovered)
+  
+  // Calculate hours per week for activity test
+  // Activity test uses the minimum of both parents' hours (for two-parent families)
+  const firstParentHoursPerWeekFromDays = firstParentDays * HOURS_PER_DAY
+  const secondParentHoursPerWeekFromDays = secondParentDays * HOURS_PER_DAY
+  const minHoursForActivity = Math.min(firstParentHoursPerWeekFromDays, secondParentHoursPerWeekFromDays)
+  const activityHoursPerFortnight = minHoursForActivity * 2
+  
+  // Calculate childcare costs for part-time scenario
+  const partTimeCombinedIncome = firstParentProRataIncome + secondParentProRataIncome
+  const partTimeChildren = children.map(child => ({
+    ...child,
+    daysPerWeek: childcareDaysNeeded
+  }))
+  const partTimeCosts = calculateTotalCosts(
+    partTimeChildren,
+    partTimeCombinedIncome,
+    activityHoursPerFortnight
+  )
+  
+  // Calculate childcare costs for full-time scenario (both parents full-time)
+  // Use the same family support days as the part-time scenario for fair comparison
+  const fullTimeCombinedIncome = firstParentFTEIncome + secondParentFTEIncome
+  const fullTimeChildcareDaysNeeded = Math.max(0, 5 - daysCoveredByNonParents)
+  const fullTimeChildren = children.map(child => ({
+    ...child,
+    daysPerWeek: fullTimeChildcareDaysNeeded
+  }))
+  const fullTimeActivityHours = FULL_TIME_HOURS * 2 // 76 hours per fortnight
+  const fullTimeCosts = calculateTotalCosts(
+    fullTimeChildren,
+    fullTimeCombinedIncome,
+    fullTimeActivityHours
+  )
+  
+  // Calculate net income for both scenarios
+  const partTimeFirstParentAfterTax = calculateAfterTaxIncome(firstParentProRataIncome)
+  const partTimeSecondParentAfterTax = calculateAfterTaxIncome(secondParentProRataIncome)
+  const partTimeCombinedAfterTax = partTimeFirstParentAfterTax + partTimeSecondParentAfterTax
+  const partTimeChildcareOutOfPocket = partTimeCosts.totalChildcareOutOfPocket * 26 // Convert to annual
+  const partTimeNetIncome = partTimeCombinedAfterTax - partTimeChildcareOutOfPocket
+  
+  const fullTimeFirstParentAfterTax = calculateAfterTaxIncome(firstParentFTEIncome)
+  const fullTimeSecondParentAfterTax = calculateAfterTaxIncome(secondParentFTEIncome)
+  const fullTimeCombinedAfterTax = fullTimeFirstParentAfterTax + fullTimeSecondParentAfterTax
+  const fullTimeChildcareOutOfPocket = fullTimeCosts.totalChildcareOutOfPocket * 26
+  const fullTimeNetIncome = fullTimeCombinedAfterTax - fullTimeChildcareOutOfPocket
+  
+  // Check if both parents are full-time (5 days each)
+  const bothFullTime = firstParentDays === 5 && secondParentDays === 5
+  
+  // Calculate tax amounts for stacking
+  const fullTimeTax = fullTimeCombinedIncome - fullTimeCombinedAfterTax
+  const partTimeTax = partTimeCombinedIncome - partTimeCombinedAfterTax
+  
+  // Prepare data for stacked bar chart
+  // Stack order: Net Income (bottom), Childcare (middle), Tax (top)
+  // Total height = Gross Income
+  const chartLabels = bothFullTime 
+    ? ['Full-Time (Both 5 days)']
+    : ['Full-Time (Both 5 days)', `${firstParentDays} days/${secondParentDays} days`]
+  
+  const chartData: ChartData<'bar'> = {
+    labels: chartLabels,
+    datasets: [
+      {
+        label: 'Net Income',
+        data: bothFullTime 
+          ? [fullTimeNetIncome]
+          : [fullTimeNetIncome, partTimeNetIncome],
+        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1,
+        maxBarThickness: undefined,
+      },
+      {
+        label: 'Childcare',
+        data: bothFullTime
+          ? [fullTimeChildcareOutOfPocket]
+          : [fullTimeChildcareOutOfPocket, partTimeChildcareOutOfPocket],
+        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+        borderColor: 'rgba(239, 68, 68, 1)',
+        borderWidth: 1,
+        maxBarThickness: undefined,
+      },
+      {
+        label: 'Tax',
+        data: bothFullTime
+          ? [fullTimeTax]
+          : [fullTimeTax, partTimeTax],
+        backgroundColor: 'rgba(251, 146, 60, 0.8)',
+        borderColor: 'rgba(251, 146, 60, 1)',
+        borderWidth: 1,
+        maxBarThickness: undefined,
+      },
+    ],
+  }
+  
+  // Detect mobile for responsive padding
+  const [isMobileView, setIsMobileView] = useState(() => 
+    typeof window !== 'undefined' && window.innerWidth < 768
+  )
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const chartOptions: ChartOptions<'bar'> = useMemo(() => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const value = context.parsed.y
+            if (value === null || value === undefined) return ''
+            return `${context.dataset.label}: $${Math.round(value).toLocaleString()}`
+          },
+          footer: function(tooltipItems) {
+            if (!tooltipItems || tooltipItems.length === 0) return ''
+            const firstItem = tooltipItems[0]
+            if (!firstItem || firstItem.dataIndex === null || firstItem.dataIndex === undefined) return ''
+            const grossIncome = bothFullTime 
+              ? fullTimeCombinedIncome 
+              : (firstItem.dataIndex === 0 ? fullTimeCombinedIncome : partTimeCombinedIncome)
+            return `Gross Income: $${Math.round(grossIncome).toLocaleString()}`
+          }
+        }
+      }
+    },
+    layout: {
+      padding: {
+        right: isMobileView ? 5 : 10,
+        left: isMobileView ? 0 : 10,
+        top: isMobileView ? 5 : 10,
+        bottom: isMobileView ? 5 : 10,
+      },
+    },
+    scales: {
+      x: {
+        stacked: true,
+        categoryPercentage: 1.0,
+        barPercentage: 1.0,
+        ticks: {
+          font: {
+            size: isMobileView ? 11 : 12,
+          },
+        },
+        grid: {
+          display: false,
+        },
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        ticks: {
+          font: {
+            size: isMobileView ? 11 : 12,
+          },
+          callback: function(value) {
+            return `$${Math.round(Number(value)).toLocaleString()}`
+          }
+        }
+      }
+    }
+  }), [isMobileView])
+  
+  // Register the plugin
+  ChartJS.register(stackedBarLabelsPlugin)
+  
+  return (
+    <div className="bg-white rounded-lg shadow-lg p-2 md:p-8 mb-3 md:mb-8">
+      <div className="text-center mb-3 md:mb-6">
+        <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">
+          Would sharing the childcare load help things?
+        </h2>
+        <p className="text-xs md:text-base text-gray-600 mb-2 md:mb-3">
+          Tax is calculated individually for each parent, but childcare costs are shared and the subsidy is based on your combined household income. Because tax rates are marginal, reducing a day of work that crosses into a higher tax bracket saves more in tax than reducing a day in a lower bracket. This means different arrangements with the same total days worked (e.g., 4+4 days vs 3+5 days) can result in different net household income, depending on which parent reduces days and whether it crosses a tax bracket. Use the calculator below to see which arrangement works best for your situation.
+        </p>
+      </div>
+      
+      {/* Parent FTE Incomes and Sliders - Combined Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+        {/* Parent 1 */}
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 md:p-4">
+          <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Parent 1</h3>
+          
+          <div className="mb-3">
+            <div className="flex justify-between text-xs md:text-sm">
+              <span className="text-gray-600">Net full-time income:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(calculateAfterTaxIncome(firstParentFTEIncome)).toLocaleString()}/year
+              </span>
+            </div>
+          </div>
+          
+          {/* Slider for Parent 1 */}
+          <div>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+              Days per week
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="5"
+              step="1"
+              value={firstParentDays}
+              onChange={(e) => setFirstParentDays(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <span>0</span>
+              <span className="font-semibold text-gray-900">{firstParentDays} day{firstParentDays !== 1 ? 's' : ''}</span>
+              <span>5</span>
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between text-xs md:text-sm">
+                <span className="text-gray-600">Net pro-rata income:</span>
+                <span className="font-semibold text-gray-900">
+                  ${Math.round(calculateAfterTaxIncome(firstParentProRataIncome)).toLocaleString()}/year
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Parent 2 */}
+        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 md:p-4">
+          <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Parent 2</h3>
+          
+          <div className="mb-3">
+            <div className="flex justify-between text-xs md:text-sm">
+              <span className="text-gray-600">Net full-time income:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(calculateAfterTaxIncome(secondParentFTEIncome)).toLocaleString()}/year
+              </span>
+            </div>
+          </div>
+          
+          {/* Slider for Parent 2 */}
+          <div>
+            <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+              Days per week
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="5"
+              step="1"
+              value={secondParentDays}
+              onChange={(e) => setSecondParentDays(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-600 mt-1">
+              <span>0</span>
+              <span className="font-semibold text-gray-900">{secondParentDays} day{secondParentDays !== 1 ? 's' : ''}</span>
+              <span>5</span>
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="flex justify-between text-xs md:text-sm">
+                <span className="text-gray-600">Net pro-rata income:</span>
+                <span className="font-semibold text-gray-900">
+                  ${Math.round(calculateAfterTaxIncome(secondParentProRataIncome)).toLocaleString()}/year
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Days Covered by Non-Parents */}
+      <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-1">The number of days that you don't need childcare even though you're working.</h3>
+        <p className="text-xs text-gray-600 mb-2">For example, if a grandparent or other family member cares for the children.</p>
+        <div>
+          <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+            Days per week
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="5"
+            step="1"
+            value={daysCoveredByNonParents}
+            onChange={(e) => setDaysCoveredByNonParents(Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="flex justify-between text-xs text-gray-600 mt-1">
+            <span>0</span>
+            <span className="font-semibold text-gray-900">{daysCoveredByNonParents} day{daysCoveredByNonParents !== 1 ? 's' : ''}</span>
+            <span>5</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Childcare Days Needed */}
+      <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
+        <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Childcare Days Needed</h3>
+        <div className="space-y-2 text-xs md:text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600">Total days per week:</span>
+            <span className="font-medium text-gray-900">{totalDaysNeeded} days</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600">Days covered by parents:</span>
+            <span className="font-medium text-gray-900 text-right">
+              {totalDaysCoveredByParents} days
+              {totalDaysCoveredByParents > 0 && (
+                <div className="text-gray-500 text-xs font-normal mt-0.5">
+                  (Parent 1: {daysCoveredByParents}, Parent 2: {daysCoveredBySecondParent})
+                </div>
+              )}
+            </span>
+          </div>
+          {daysCoveredByNonParents > 0 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Days covered by support network:</span>
+              <span className="font-medium text-gray-900">
+                {daysCoveredByNonParents} day{daysCoveredByNonParents !== 1 ? 's' : ''}
+              </span>
+            </div>
+          )}
+          <div className="flex justify-between border-t border-orange-200 pt-2">
+            <span className="text-gray-600">Total days covered:</span>
+            <span className="font-medium text-gray-900">
+              {totalDaysCovered} days
+            </span>
+          </div>
+          <div className="flex justify-between border-t border-orange-200 pt-2">
+            <span className="font-semibold text-gray-900">Childcare days needed:</span>
+            <span className="font-bold text-orange-700">{childcareDaysNeeded} day{childcareDaysNeeded !== 1 ? 's' : ''}/week</span>
+          </div>
+        </div>
+        
+        {/* Childcare Costs Breakdown */}
+        {childcareDaysNeeded > 0 && (
+          <div className="mt-4 pt-4 border-t border-orange-200">
+            <h4 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Childcare Costs (Annual)</h4>
+            <div className="bg-white rounded-md p-2 md:p-3 space-y-2">
+              <div className="flex justify-between text-xs md:text-sm">
+                <span className="text-gray-600">Total cost:</span>
+                <span className="font-medium text-gray-900">
+                  ${Math.round(partTimeCosts.totalChildcareCost * 26).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs md:text-sm">
+                <span className="text-gray-600">Subsidy received:</span>
+                <span className="font-medium text-gray-700">
+                  ${Math.round(partTimeCosts.totalChildcareSubsidy * 26).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-xs md:text-sm border-t border-gray-200 pt-2">
+                <span className="font-semibold text-gray-900">Out-of-pocket:</span>
+                <span className="font-bold text-orange-700">
+                  ${Math.round(partTimeChildcareOutOfPocket).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Bar Graph Comparison */}
+      {!bothFullTime && (
+        <div className="mb-4 md:mb-6">
+          <h3 className="text-xs md:text-base font-semibold text-gray-900 mb-2 md:mb-3 text-center">
+            Comparison: Full-Time vs Part-Time Arrangement
+          </h3>
+          <div className="w-full h-[450px] md:h-[400px] overflow-visible">
+            <Bar data={chartData} options={chartOptions} />
+          </div>
+          <div className="mt-3 space-y-2 text-xs md:text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Full-time net income:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(fullTimeNetIncome).toLocaleString()}/year
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Part-time net income:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(partTimeNetIncome).toLocaleString()}/year
+              </span>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-2">
+              <span className="font-semibold text-gray-900">Difference:</span>
+              <span className={`font-bold ${partTimeNetIncome >= fullTimeNetIncome ? 'text-green-600' : 'text-red-600'}`}>
+                {partTimeNetIncome >= fullTimeNetIncome ? '+' : ''}
+                ${Math.round(partTimeNetIncome - fullTimeNetIncome).toLocaleString()}/year
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Single bar when both are full-time */}
+      {bothFullTime && (
+        <div className="mb-4 md:mb-6">
+          <h3 className="text-xs md:text-base font-semibold text-gray-900 mb-2 md:mb-3 text-center">
+            Full-Time Arrangement Breakdown
+          </h3>
+          <div className="w-full h-[450px] md:h-[400px] overflow-visible">
+            <Bar data={chartData} options={chartOptions} />
+          </div>
+          <div className="mt-3 space-y-2 text-xs md:text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Gross income:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(fullTimeCombinedIncome).toLocaleString()}/year
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Tax:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(fullTimeTax).toLocaleString()}/year
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Childcare out-of-pocket:</span>
+              <span className="font-semibold text-gray-900">
+                ${Math.round(fullTimeChildcareOutOfPocket).toLocaleString()}/year
+              </span>
+            </div>
+            <div className="flex justify-between border-t border-gray-200 pt-2">
+              <span className="font-semibold text-gray-900">Net income:</span>
+              <span className="font-bold text-gray-900">
+                ${Math.round(fullTimeNetIncome).toLocaleString()}/year
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
