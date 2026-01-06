@@ -748,7 +748,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                     )}
                   </>
                 ) : (
-                  <>Your Income</>
+                  <>Second Parent Income</>
                 )}
               </span>
             </div>
@@ -756,7 +756,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           {minWageEquivalent && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0"></div>
-              <span>Minimum wage equivalent (${MINIMUM_WAGE_POST_TAX_HOURLY_RATE.toFixed(2)}/hr after tax)</span>
+              <span>Minimum wage equivalent (${MINIMUM_WAGE_POST_TAX_HOURLY_RATE.toFixed(2)}/hr after tax, excluding any childcare costs)</span>
             </div>
           )}
           {breakEven && (
@@ -836,7 +836,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
             <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
-              <li><strong>Red dot:</strong> The point where your net income equals minimum wage (after tax).</li>
+              <li><strong>Red dot:</strong> The point where household income increase equals minimum wage (after tax).</li>
               <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'Your current income.'}</li>
             </ul>
           </div>

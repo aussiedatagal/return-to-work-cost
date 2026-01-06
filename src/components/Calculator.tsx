@@ -605,10 +605,7 @@ export default function Calculator() {
                   </p>
                 )}
                 <p className="text-xs md:text-base text-gray-600">
-                  Household income increase per hour (after tax and childcare): ${breakdown.effectiveHourlyRate.toFixed(2)}/hr
-                </p>
-                <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">
-                  {breakdown.percentageOfIncomeLost.toFixed(1)}% of gross income lost to tax and childcare
+                  Household income increases ${breakdown.effectiveHourlyRate.toFixed(2)}/hr worked by second parent.
                 </p>
               </div>
             </div>
