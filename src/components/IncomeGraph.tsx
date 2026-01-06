@@ -554,7 +554,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                         title: `You earn $${Math.round(point.grossIncome).toLocaleString()}`,
                         takeHome,
                         lines,
-                        note: 'You are working for free.',
+                        note: 'Household net income does not increase.',
                         color: 'amber'
                       })
                     }
@@ -567,7 +567,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                   width: '16px',
                   height: '16px',
                 }}
-                aria-label="Working for free"
+                aria-label="Break-even point (no net income gain)"
               >
                 <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
               </button>
@@ -622,7 +622,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                       if (point.netIncome < 0) {
                         note = 'You are losing money by working.'
                       } else if (point.netIncome === 0) {
-                        note = 'You are working for free.'
+                        note = 'Household net income does not increase.'
                       } else if (Math.abs(point.netIncome - minimumWageForHours) < 1) {
                         note = 'You are working at minimum wage.'
                       } else if (point.netIncome < minimumWageForHours) {
@@ -762,7 +762,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           {breakEven && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0"></div>
-              <span>Working for free (net income = $0)</span>
+              <span>Break-even point (net income = $0)</span>
             </div>
           )}
         </div>
@@ -835,7 +835,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (working for free).</li>
+              <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
               <li><strong>Red dot:</strong> The point where your net income equals minimum wage (after tax).</li>
               <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'Your current income.'}</li>
             </ul>
