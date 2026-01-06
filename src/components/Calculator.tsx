@@ -12,6 +12,7 @@ import { calculateMinimumWageAfterTaxForHours } from '../utils/graphData'
 import { getShareableUrl, decodeStateFromUrl } from '../utils/shareUtils'
 import IncomeGraph from './IncomeGraph'
 import HoursWorkedGraph from './HoursWorkedGraph'
+import SharingChildcareLoad from './SharingChildcareLoad'
 import SourceModal from './SourceModal'
 
 // Based on ABS Characteristics of Employment (released Aug 2024, data to Aug 2024)
@@ -632,6 +633,17 @@ export default function Calculator() {
             onConfigureChildren={() => setConfigModalOpen('childcare')}
           />
         </div>
+        
+        {familyType === 'two-parent' && (
+          <SharingChildcareLoad
+            firstParentIncome={firstParentIncome}
+            firstParentHoursPerWeek={firstParentHoursPerWeek}
+            secondParentIncome={selectedSecondParentIncome}
+            secondParentHoursPerWeek={secondParentHoursPerWeek}
+            children={children}
+            familyType={familyType}
+          />
+        )}
         
         <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-gray-200">
           {hasChanges ? (

@@ -7,5 +7,8 @@ vi.mock('react-chartjs-2', () => ({
   Line: vi.fn().mockImplementation(() => {
     return React.createElement('div', { 'data-testid': 'mock-chartjs-chart' })
   }),
+  Bar: vi.fn().mockImplementation(() => {
+    return React.createElement('div', { 'data-testid': 'mock-chartjs-bar-chart' })
+  }),
 }))
 
