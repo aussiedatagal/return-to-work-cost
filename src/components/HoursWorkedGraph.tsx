@@ -637,7 +637,7 @@ export default function HoursWorkedGraph({
     <div className="bg-white rounded-lg p-2 md:p-6 border border-gray-200">
       {/* Incremental Income Table */}
       <div className="mb-4 md:mb-6">
-        <h4 className="text-sm md:text-base font-semibold text-gray-900 mb-3 text-center">Net Income Increase Per Additional Day</h4>
+        <h4 className="text-sm md:text-base font-semibold text-gray-900 mb-3 text-center">Net Household Income Increase Per Additional Day Worked</h4>
         <div className="overflow-x-auto -mx-2 md:mx-0 px-2 md:px-0">
           <table className="w-full text-xs md:text-sm">
             <thead>
