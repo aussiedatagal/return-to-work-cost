@@ -300,7 +300,7 @@ export default function Calculator() {
           <p className="text-sm md:text-xl text-gray-700 max-w-2xl mx-auto">
             {familyType === 'single-parent' 
               ? 'See how much a single parent actually takes home after tax and childcare costs'
-              : 'See how much a parent returning to work (often the mother) actually takes home after tax and childcare costs'}
+              : 'See how much extra income your family gets when a second parent returns to work, after tax and childcare costs'}
           </p>
         </header>
         
@@ -329,7 +329,7 @@ export default function Calculator() {
             <p className="text-xs md:text-base text-gray-600 mb-1.5 md:mb-2">
               {familyType === 'single-parent' 
                 ? 'Single parent working: what they actually take home'
-                : 'Parent returning to work: what they actually take home'}
+                : 'Net increase in family income when second parent returns to work (after tax and childcare)'}
             </p>
             <p className="text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
               Using data for a typical Sydney family (click on the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span> for sources). Change to your own situation using the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span> icon.
@@ -599,7 +599,9 @@ export default function Calculator() {
                 )}
                 {breakdown.netIncomeAfterChildcare >= 0 && isOutrageous && (
                   <p className="text-sm md:text-base font-semibold text-orange-600 mt-2 mb-1">
-                    {familyType === 'single-parent' ? 'Parent will take home less than minimum wage' : 'Parent returning to work will take home less than minimum wage'}
+                    {familyType === 'single-parent' 
+                      ? 'Parent will take home less than minimum wage' 
+                      : 'Family\'s net income increase is less than minimum wage for the hours worked'}
                   </p>
                 )}
                 <p className="text-xs md:text-base text-gray-600">
@@ -608,6 +610,11 @@ export default function Calculator() {
                 <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">
                   {breakdown.percentageOfIncomeLost.toFixed(1)}% of gross income lost to tax and childcare
                 </p>
+                {familyType === 'two-parent' && (
+                  <p className="text-xs text-gray-500 mt-2 italic">
+                    Note: This shows the net increase in family income when a second parent works. Childcare costs come from the family's pooled income, not just the returning parent's salary.
+                  </p>
+                )}
               </div>
             </div>
           </div>
