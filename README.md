@@ -1,6 +1,6 @@
 # The Real Cost of Returning to Work
 
-**Interactive calculator showing how much a parent returning to work (often the mother) actually takes home after tax and childcare costs.**
+**Interactive calculator showing how much extra household income families get when a second parent returns to work, after tax and childcare costs.**
 
 [🌐 Live Site](https://aussiedatagal.github.io/return-to-work-cost/)
 
@@ -15,7 +15,7 @@ This calculator helps Australian families understand the real financial impact o
 - Out-of-pocket childcare costs
 - Activity test hours (determines subsidised hours)
 
-The interactive graph shows how net income changes as the parent returning to work's income increases, revealing the break-even point and minimum wage equivalent.
+The interactive graph shows how net household income increases as the second parent's income increases, revealing the break-even point and minimum wage equivalent.
 
 ## Features
 

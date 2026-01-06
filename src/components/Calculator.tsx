@@ -587,7 +587,7 @@ export default function Calculator() {
             <div className={`rounded-lg p-2.5 md:p-8 ${isOutrageous ? 'bg-red-50' : 'bg-gray-50 border-2 border-gray-200'}`}>
               <div className="text-center">
                 <p className="text-xs font-medium text-gray-600 mb-1 md:mb-2">
-                  {familyType === 'single-parent' ? 'NET INCOME AFTER CHILDCARE' : 'RETURNING PARENT\'S NET INCOME AFTER CHILDCARE'}
+                  {familyType === 'single-parent' ? 'NET INCOME AFTER CHILDCARE' : 'NET HOUSEHOLD INCOME INCREASE AFTER CHILDCARE'}
                 </p>
                 <div className={`text-xl md:text-3xl font-bold mb-1 md:mb-2 ${isOutrageous ? 'text-red-700' : 'text-gray-700'}`}>
                   ${Math.round(breakdown.netIncomeAfterChildcare).toLocaleString()}
@@ -605,16 +605,11 @@ export default function Calculator() {
                   </p>
                 )}
                 <p className="text-xs md:text-base text-gray-600">
-                  Effective hourly rate (after tax and childcare): ${breakdown.effectiveHourlyRate.toFixed(2)}/hr
+                  Household income increase per hour (after tax and childcare): ${breakdown.effectiveHourlyRate.toFixed(2)}/hr
                 </p>
                 <p className="text-xs md:text-sm text-gray-500 mt-1 md:mt-2">
                   {breakdown.percentageOfIncomeLost.toFixed(1)}% of gross income lost to tax and childcare
                 </p>
-                {familyType === 'two-parent' && (
-                  <p className="text-xs text-gray-500 mt-2 italic">
-                    Note: This shows the net increase in family income when a second parent works. Childcare costs come from the family's pooled income, not just the returning parent's salary.
-                  </p>
-                )}
               </div>
             </div>
           </div>
@@ -768,7 +763,7 @@ export default function Calculator() {
           </p>
                     <p className="text-gray-700">
             {familyType === 'single-parent' 
-              ? `Based on the parent's activity hours (${secondParentHoursPerWeek}h/week):`
+              ? `Based on activity hours (${secondParentHoursPerWeek}h/week):`
               : `Based on the parent with lowest activity hours (${Math.min(firstParentHoursPerWeek, secondParentHoursPerWeek)}h/week):`}
           </p>
           <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
@@ -904,7 +899,7 @@ export default function Calculator() {
         <div className="space-y-6">
                     <div>
             <label htmlFor="config-second-income" className="block text-sm font-medium text-gray-700 mb-2">
-              Parent Returning to Work Income (AUD per year)
+              Second Parent Income (AUD per year)
             </label>
             <input
               id="config-second-income"
@@ -929,7 +924,7 @@ export default function Calculator() {
           
           <div>
             <label htmlFor="config-second-hours" className="block text-sm font-medium text-gray-700 mb-2">
-              Returning Parent's Hours (per week)
+              Second Parent's Hours (per week)
             </label>
             <input
               id="config-second-hours"
@@ -1011,7 +1006,7 @@ export default function Calculator() {
             <>
               <div>
                 <label htmlFor="config-first-income" className="block text-sm font-medium text-gray-700 mb-2">
-                  Already Working Parent Income (AUD per year)
+                  First Parent Income (AUD per year)
                 </label>
                 <input
                   id="config-first-income"
@@ -1036,7 +1031,7 @@ export default function Calculator() {
               
               <div>
                 <label htmlFor="config-first-hours" className="block text-sm font-medium text-gray-700 mb-2">
-                  Already Working Parent's Work Hours (per week)
+                  First Parent's Work Hours (per week)
                 </label>
                 <input
                   id="config-first-hours"

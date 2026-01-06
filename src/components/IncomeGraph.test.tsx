@@ -36,7 +36,7 @@ describe('IncomeGraph', () => {
       />
     )
     
-    expect(screen.getByText("Returning Parent's Net Income After Tax & Childcare")).toBeInTheDocument()
+    expect(screen.getByText("Net Household Income Increase After Tax & Childcare")).toBeInTheDocument()
   })
 
   it('displays working for free point in legend when break-even exists', async () => {
@@ -63,7 +63,7 @@ describe('IncomeGraph', () => {
     )
     
     expect(screen.getByText(/Based on:/i)).toBeInTheDocument()
-    expect(screen.getByText(/Income of parent who is already working: \$115,024/i)).toBeInTheDocument()
+    expect(screen.getByText(/First parent income: \$115,024/i)).toBeInTheDocument()
   })
 
   it('displays children information', () => {
@@ -87,7 +87,7 @@ describe('IncomeGraph', () => {
       />
     )
     
-    expect(screen.getByText("Returning Parent's Net Income After Tax & Childcare")).toBeInTheDocument()
+    expect(screen.getByText("Net Household Income Increase After Tax & Childcare")).toBeInTheDocument()
   })
 
   it('renders chart component', async () => {
