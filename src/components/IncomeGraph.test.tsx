@@ -39,7 +39,7 @@ describe('IncomeGraph', () => {
     expect(screen.getByText("Net Household Income Increase After Tax & Childcare")).toBeInTheDocument()
   })
 
-  it('displays working for free point in legend when break-even exists', async () => {
+  it('displays break-even point in legend when break-even exists', async () => {
     render(
       <IncomeGraph
         firstParentIncome={115024}
@@ -49,7 +49,7 @@ describe('IncomeGraph', () => {
     )
     
     await waitFor(() => {
-      expect(screen.getByText(/Working for free/i)).toBeInTheDocument()
+      expect(screen.getByText(/Break-even point/i)).toBeInTheDocument()
     })
   })
 

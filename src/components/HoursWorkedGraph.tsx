@@ -816,7 +816,7 @@ export default function HoursWorkedGraph({
                       title: `${breakEven.hoursPerWeek.toFixed(1)} hours/week (${breakEven.daysPerWeek.toFixed(1)} days/week)`,
                       takeHome,
                       lines,
-                      note: 'You are working for free.',
+                      note: 'Household net income does not increase.',
                       color: 'amber'
                     })
                   }
@@ -828,7 +828,7 @@ export default function HoursWorkedGraph({
                   width: '16px',
                   height: '16px',
                 }}
-                aria-label="Working for free"
+                aria-label="Break-even point (no net income gain)"
               >
                 <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
               </button>
@@ -846,7 +846,7 @@ export default function HoursWorkedGraph({
                     if (currentHoursPoint.netIncome < 0) {
                       note = 'You are losing money by working.'
                     } else if (currentHoursPoint.netIncome === 0) {
-                      note = 'You are working for free.'
+                      note = 'Household net income does not increase.'
                     } else if (currentHoursPoint.netIncome < minimumWageForHours) {
                       note = 'You are earning less than minimum wage.'
                     }
@@ -1046,7 +1046,7 @@ export default function HoursWorkedGraph({
           {breakEven && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0"></div>
-              <span>Working for free (net income = $0) at {breakEven.hoursPerWeek.toFixed(1)}h/week ({breakEven.daysPerWeek.toFixed(1)} days/week)</span>
+              <span>Break-even point (net income = $0) at {breakEven.hoursPerWeek.toFixed(1)}h/week ({breakEven.daysPerWeek.toFixed(1)} days/week)</span>
             </div>
           )}
           {minWageIntersection && (
@@ -1221,7 +1221,7 @@ export default function HoursWorkedGraph({
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Amber dot:</strong> The break-even point where household income increase equals $0 (working for free).</li>
+              <li><strong>Amber dot:</strong> The break-even point where household income increase equals $0 (household net income does not increase).</li>
               <li><strong>Blue dot:</strong> Your current hours worked per week.</li>
               <li><strong>Red dot:</strong> The point where household income increase equals minimum wage. Working more hours beyond this point results in household income increase below minimum wage.</li>
               <li><strong>Green dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
