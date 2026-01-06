@@ -36,9 +36,16 @@ The interactive graph shows how net income changes as the parent returning to wo
 The calculator uses official Australian Government rates for 2025-26:
 
 - **Child Care Subsidy**: Based on combined family income
-  - Up to $85,279: 90% subsidy
-  - $85,279 to $535,279: Subsidy decreases by 1% per $5,000
-  - $535,279+: 0% subsidy
+  - **First child (standard rate)**:
+    - Up to $85,279: 90% subsidy
+    - $85,279 to $535,279: Subsidy decreases by 1% per $5,000
+    - $535,279+: 0% subsidy
+  - **Second+ children (higher rate)**:
+    - Up to $143,273: 95% subsidy
+    - $143,273 to $188,273: Subsidy decreases by 1% per $3,000 (from 95% to 80%)
+    - $188,273 to $267,563: 80% subsidy
+    - $267,563 to $357,563: Subsidy decreases by 1% per $3,000 (from 80% to 50%)
+    - $357,563+: 50% subsidy (does not go to 0%)
 - **Tax Rates**: Based on ATO individual income tax brackets
 - **Activity Test & 3 Day Guarantee**: 
   - All CCS-eligible families receive minimum 72 hours per fortnight (3 Day Guarantee, effective January 5, 2026)
@@ -79,6 +86,7 @@ This project is deployed to GitHub Pages using GitHub Actions. The workflow auto
 ## Sources
 
 - [Services Australia - Child Care Subsidy](https://www.servicesaustralia.gov.au/child-care-subsidy)
+- [Services Australia - Your number of children in care can affect your higher Child Care Subsidy](https://www.servicesaustralia.gov.au/your-number-children-care-can-affect-your-higher-child-care-subsidy?context=41186)
 - [ATO - Individual Income Tax Rates](https://www.ato.gov.au/rates/individual-income-tax-rates)
 - [Department of Education - Child Care Subsidy Hourly Rate Caps](https://www.education.gov.au/early-childhood/announcements/child-care-subsidy-hourly-rate-caps-are-changing-soon-0)
 - [Department of Education - 3 Day Guarantee](https://www.education.gov.au/early-childhood/providers/child-care-subsidy/3-day-guarantee)
