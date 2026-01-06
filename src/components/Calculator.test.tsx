@@ -26,7 +26,7 @@ describe('Calculator', () => {
     
     expect(screen.getAllByText(/gross income/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/after tax/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/net income after childcare/i)).toBeInTheDocument()
+    expect(screen.getByText(/net household income increase after childcare/i)).toBeInTheDocument()
   })
 
   it('displays childcare costs breakdown', () => {
@@ -48,7 +48,7 @@ describe('Calculator', () => {
     if (secondParentButton) {
       await user.click(secondParentButton)
       
-      const incomeInput = screen.getByLabelText(/parent returning to work income/i) as HTMLInputElement
+      const incomeInput = screen.getByLabelText(/second parent income/i) as HTMLInputElement
       await user.clear(incomeInput)
       await user.type(incomeInput, '100000')
       

@@ -235,7 +235,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
         type: 'linear',
       title: {
           display: true,
-        text: familyType === 'single-parent' ? "Parent's gross income" : "Parent returning to work's gross income",
+        text: familyType === 'single-parent' ? "Gross income" : "Gross income",
           font: {
             size: 12,
           },
@@ -482,7 +482,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     <div className="bg-white rounded-lg p-2 md:p-6 border border-gray-200">
       <div className="flex items-center justify-center gap-2 mb-2 md:mb-4">
         <h3 className="text-sm md:text-xl font-semibold text-gray-900 px-1 md:px-0 text-center">
-          {familyType === 'single-parent' ? "Parent's Net Income After Tax & Childcare" : "Returning Parent's Net Income After Tax & Childcare"}
+          {familyType === 'single-parent' ? "Net Income After Tax & Childcare" : "Net Household Income Increase After Tax & Childcare"}
         </h3>
         <button
           type="button"
@@ -725,7 +725,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-blue-500 flex-shrink-0"></div>
-            <span>{familyType === 'single-parent' ? 'Net income after tax and childcare' : 'Net income of parent returning to work after tax and childcare'}</span>
+            <span>{familyType === 'single-parent' ? 'Net income after tax and childcare' : 'Net household income increase after tax and childcare'}</span>
           </div>
           {averageIncomePoint && (
             <div className="flex items-center space-x-2">
@@ -772,7 +772,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <ul className="list-disc list-inside space-y-1 ml-2">
             {familyType === 'two-parent' && (
               <li className="flex items-center gap-1.5">
-                <span>Income of parent who is already working: ${firstParentIncome.toLocaleString()}</span>
+                <span>First parent income: ${firstParentIncome.toLocaleString()}</span>
                 {onOpenSourceModal && (
                   <button
                     type="button"
@@ -816,7 +816,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Axes</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>X-axis (horizontal):</strong> Shows the gross income of the {familyType === 'single-parent' ? 'parent' : 'parent returning to work'}.</li>
+              <li><strong>X-axis (horizontal):</strong> Shows the gross income {familyType === 'single-parent' ? '' : 'of the second parent'}.</li>
               <li><strong>Y-axis (vertical):</strong> Shows the net income after tax and childcare costs.</li>
             </ul>
           </div>

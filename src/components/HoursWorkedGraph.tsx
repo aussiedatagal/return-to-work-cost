@@ -646,8 +646,8 @@ export default function HoursWorkedGraph({
                 <th className="text-left py-2 px-1 md:px-2 font-semibold text-gray-700 hidden sm:table-cell">Hours</th>
                 <th className="text-right py-2 px-1 md:px-2 font-semibold text-gray-700">
                   <div className="flex items-center justify-end gap-1">
-                    <span className="hidden md:inline">Net Yearly Income</span>
-                    <span className="md:hidden">Income</span>
+                    <span className="hidden md:inline">Net Household Income Increase</span>
+                    <span className="md:hidden">Income Increase</span>
                     <button
                       type="button"
                       onClick={() => setInfoModalOpen(true)}
@@ -748,7 +748,7 @@ export default function HoursWorkedGraph({
       
       <div className="flex items-center justify-center gap-2 mb-2 md:mb-4">
         <h3 className="text-sm md:text-xl font-semibold text-gray-900 px-1 md:px-0 text-center">
-          Net Income by Hours Worked Per Week
+          Net Household Income Increase by Hours Worked Per Week
         </h3>
         <button
           type="button"
@@ -895,7 +895,7 @@ export default function HoursWorkedGraph({
                     const { takeHome, lines } = buildLinesFromPoint(pointToUse)
                     const hoursText = minWageIntersection.hoursPerWeek.toFixed(1)
                     const daysText = minWageIntersection.daysPerWeek.toFixed(1)
-                    const note = `Your net income equals minimum wage. Working more hours results in net income below minimum wage, though you still take home money.`
+                    const note = `Household income increase equals minimum wage. Working more hours results in household income increase below minimum wage, though you still take home money.`
                     setSelectedTooltip({
                       x: markerPositions.minWageIntersection!.x,
                       y: markerPositions.minWageIntersection!.y,
@@ -930,7 +930,7 @@ export default function HoursWorkedGraph({
                     const { takeHome, lines } = buildLinesFromPoint(maxIncomePoint)
                     const hoursText = maxIncomePoint.hoursPerWeek.toFixed(1)
                     const daysText = maxIncomePoint.daysPerWeek.toFixed(1)
-                    const note = 'This is the point where your net income is highest. Working more hours beyond this point results in lower net income.'
+                    const note = 'This is the point where household income increase is highest. Working more hours beyond this point results in lower household income increase.'
                     setSelectedTooltip({
                       x: markerPositions.maxIncome!.x,
                       y: markerPositions.maxIncome!.y,
@@ -1027,7 +1027,7 @@ export default function HoursWorkedGraph({
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-blue-500 flex-shrink-0"></div>
-            <span>Net income after tax and childcare</span>
+            <span>Net household income increase after tax and childcare</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 border-t-2 border-green-500 border-dashed flex-shrink-0"></div>
@@ -1053,7 +1053,7 @@ export default function HoursWorkedGraph({
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0"></div>
               <span>
-                At {minWageIntersection.hoursPerWeek.toFixed(1)}h/week ({minWageIntersection.daysPerWeek.toFixed(1)} days/week), net income equals minimum wage.
+                At {minWageIntersection.hoursPerWeek.toFixed(1)}h/week ({minWageIntersection.daysPerWeek.toFixed(1)} days/week), household income increase equals minimum wage.
               </span>
             </div>
           )}
@@ -1082,7 +1082,7 @@ export default function HoursWorkedGraph({
       <SourceModal
         isOpen={infoModalOpen}
         onClose={() => setInfoModalOpen(false)}
-        title="Net Yearly Income Calculation"
+        title="Net Household Income Increase Calculation"
       >
         <div className="space-y-4">
           <p className="text-gray-700">
@@ -1133,7 +1133,7 @@ export default function HoursWorkedGraph({
           <div className="space-y-4">
             <div className="py-2 border-b border-gray-200">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-1">
-                <div className="text-sm text-gray-600">Gross income</div>
+                <div className="text-sm text-gray-600">Gross income increase</div>
                 <div className="text-sm text-green-600">${Math.round(dayBreakdown.additionalIncome).toLocaleString()}</div>
               </div>
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-2">
@@ -1142,7 +1142,7 @@ export default function HoursWorkedGraph({
               </div>
               <div className="border-t border-gray-300 pt-2 mt-1">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
-                  <div className="font-medium text-gray-900">Income</div>
+                  <div className="font-medium text-gray-900">Income increase</div>
                   <div className="font-semibold text-green-600">${Math.round(dayBreakdown.additionalIncome - dayBreakdown.additionalTax).toLocaleString()}</div>
                 </div>
               </div>
@@ -1212,8 +1212,8 @@ export default function HoursWorkedGraph({
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">The lines</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Blue solid line:</strong> Your net income after tax and childcare costs. This is what you actually take home.</li>
-              <li><strong>Green dashed line:</strong> Your income after tax only (without childcare costs). This shows what you'd earn if childcare were free.</li>
+              <li><strong>Blue solid line:</strong> Household income increase after tax and childcare costs.</li>
+              <li><strong>Green dashed line:</strong> Household income increase after tax only (without childcare costs). This shows what you'd earn if childcare were free.</li>
               <li><strong>Red dashed line:</strong> Minimum wage (after tax) for the hours worked. This is a reference point to compare your earnings.</li>
             </ul>
           </div>
@@ -1221,10 +1221,10 @@ export default function HoursWorkedGraph({
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (working for free).</li>
+              <li><strong>Amber dot:</strong> The break-even point where household income increase equals $0 (working for free).</li>
               <li><strong>Blue dot:</strong> Your current hours worked per week.</li>
-              <li><strong>Red dot:</strong> The point where your net income equals minimum wage. Working more hours beyond this point results in net income below minimum wage.</li>
-              <li><strong>Green dot:</strong> The point where your net income is highest. Working more hours beyond this point results in lower net income.</li>
+              <li><strong>Red dot:</strong> The point where household income increase equals minimum wage. Working more hours beyond this point results in household income increase below minimum wage.</li>
+              <li><strong>Green dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
             </ul>
           </div>
           
@@ -1240,9 +1240,9 @@ export default function HoursWorkedGraph({
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Understanding the results</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li>The gap between the green and blue lines shows how much childcare costs reduce your take-home pay.</li>
-              <li>If the blue line goes below $0, childcare costs more than you earn at those hours.</li>
-              <li>The slope of the blue line shows how much your net income increases for each additional hour worked. Notice how it can flatten or even decrease as hours increase due to subsidy changes.</li>
+              <li>The gap between the green and blue lines shows how much childcare costs reduce household income increase.</li>
+              <li>If the blue line goes below $0, childcare costs more than the household income increase at those hours.</li>
+              <li>The slope of the blue line shows how much household income increase changes for each additional hour worked. Notice how it can flatten or even decrease as hours increase due to subsidy changes.</li>
               <li>When the blue line crosses below the red line, you're earning less than minimum wage (after accounting for childcare costs).</li>
             </ul>
           </div>
@@ -1250,7 +1250,7 @@ export default function HoursWorkedGraph({
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Why returns diminish</h3>
             <p className="text-gray-700 ml-2">
-              As you work more hours, your net income per additional hour can decrease because:
+              As you work more hours, household income increase per additional hour can decrease because:
             </p>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
               <li>The childcare subsidy percentage decreases as your combined family income rises.</li>
