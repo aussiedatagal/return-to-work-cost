@@ -204,12 +204,12 @@ export default function IncomeGraph(props: IncomeGraphProps) {
       const point = graphData[index]
       const x = chart.scales.x.getPixelForValue(point.grossIncome)
       const y = chart.scales.y.getPixelForValue(point.netIncome)
-      const note = point.netIncome < 0 ? 'Childcare costs more than you earn.' : undefined
+      const note = point.netIncome < 0 ? 'Childcare costs more than families earn.' : undefined
       const { takeHome, lines } = buildLinesFromPoint(point)
       setSelectedTooltip({
         x,
         y,
-        title: `You earn $${Math.round(point.grossIncome).toLocaleString()}`,
+        title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
         takeHome,
         lines,
         note,
@@ -334,7 +334,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
       ? `$${netIncomeVal.toLocaleString()}`
       : `-$${Math.abs(netIncomeVal).toLocaleString()}`
     return {
-      takeHome: `You take home ${netIncome}`,
+      takeHome: `Net income: ${netIncome}`,
       lines: [
         `Tax: $${taxVal.toLocaleString()}`,
         `Childcare: $${childcareVal.toLocaleString()}`,
@@ -551,7 +551,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                       setSelectedTooltip({
                         x: chartRef.current.scales.x.getPixelForValue(breakEven.income),
                         y: chartRef.current.scales.y.getPixelForValue(point.netIncome),
-                        title: `You earn $${Math.round(point.grossIncome).toLocaleString()}`,
+                        title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
                         takeHome,
                         lines,
                         note: 'Household net income does not increase.',
@@ -586,10 +586,10 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                       setSelectedTooltip({
                         x: chartRef.current.scales.x.getPixelForValue(minWageEquivalent.income),
                         y: chartRef.current.scales.y.getPixelForValue(point.netIncome),
-                        title: `You earn $${Math.round(point.grossIncome).toLocaleString()}`,
+                        title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
                         takeHome,
                         lines,
-                        note: 'You are working at minimum wage.',
+                        note: 'Families are working at minimum wage.',
                         color: 'red'
                       })
                     }
@@ -608,7 +608,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
               </button>
             )}
 
-            {/* Average Income / Your Salary Marker */}
+            {/* Average Income / Current Income Marker */}
             {averageIncomePoint && markerPositions.average && (
               <button
                 type="button"
@@ -620,19 +620,19 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                     if (point && chartRef.current?.scales.x && chartRef.current?.scales.y) {
                       let note: string | undefined
                       if (point.netIncome < 0) {
-                        note = 'You are losing money by working.'
+                        note = 'Families are losing money by working.'
                       } else if (point.netIncome === 0) {
                         note = 'Household net income does not increase.'
                       } else if (Math.abs(point.netIncome - minimumWageForHours) < 1) {
-                        note = 'You are working at minimum wage.'
+                        note = 'Families are working at minimum wage.'
                       } else if (point.netIncome < minimumWageForHours) {
-                        note = 'You are earning less than minimum wage.'
+                        note = 'Families are earning less than minimum wage.'
                       }
                       const { takeHome, lines } = buildLinesFromPoint(point)
                       setSelectedTooltip({
                         x: chartRef.current.scales.x.getPixelForValue(avgIncome),
                         y: chartRef.current.scales.y.getPixelForValue(point.netIncome),
-                        title: `You earn $${Math.round(point.grossIncome).toLocaleString()}`,
+                        title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
                         takeHome,
                         lines,
                         note,
@@ -648,7 +648,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                   width: '16px',
                   height: '16px',
                 }}
-                aria-label={isUsingDefaultIncome ? 'Average income point' : 'Your salary point'}
+                aria-label={isUsingDefaultIncome ? 'Average income point' : 'Current income point'}
               >
                 <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
               </button>
@@ -824,11 +824,11 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">The blue line</h3>
             <p className="text-gray-700 ml-2">
-              This shows how your net income changes as your gross income increases. The line accounts for:
+              This shows how net income changes as gross income increases. The line accounts for:
             </p>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
               <li>Income tax (which increases as income rises)</li>
-              <li>Childcare costs (which change based on your income due to subsidy percentage changes)</li>
+              <li>Childcare costs (which change based on income due to subsidy percentage changes)</li>
             </ul>
           </div>
           
@@ -837,7 +837,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
               <li><strong>Red dot:</strong> The point where household income increase equals minimum wage (after tax).</li>
-              <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'Your current income.'}</li>
+              <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'The current income level.'}</li>
             </ul>
           </div>
           
@@ -853,8 +853,8 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Understanding the results</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li>If the line goes below $0, childcare costs more than you earn at that income level.</li>
-              <li>The slope of the line shows how much your net income increases for each additional dollar of gross income.</li>
+              <li>If the line goes below $0, childcare costs more than families earn at that income level.</li>
+              <li>The slope of the line shows how much net income increases for each additional dollar of gross income.</li>
               <li>As income increases, the subsidy percentage decreases, which can make the line less steep.</li>
             </ul>
           </div>

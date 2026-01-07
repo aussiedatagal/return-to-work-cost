@@ -124,12 +124,15 @@ export default function SharingChildcareLoad({
     : secondParentIncome
   
   // State for days worked by each parent
-  const [firstParentDays, setFirstParentDays] = useState(() => 
-    Math.round(firstParentHoursPerWeek / HOURS_PER_DAY)
-  )
-  const [secondParentDays, setSecondParentDays] = useState(() => 
-    Math.round(secondParentHoursPerWeek / HOURS_PER_DAY)
-  )
+  // Default to 4 days for both parents to show the sharing scenario
+  const [firstParentDays, setFirstParentDays] = useState(() => {
+    const calculatedDays = Math.round(firstParentHoursPerWeek / HOURS_PER_DAY)
+    return calculatedDays === 5 ? 4 : calculatedDays
+  })
+  const [secondParentDays, setSecondParentDays] = useState(() => {
+    const calculatedDays = Math.round(secondParentHoursPerWeek / HOURS_PER_DAY)
+    return calculatedDays === 5 ? 4 : calculatedDays
+  })
   
   // State for days covered by non-parents (grandparents/family) for free
   const [daysCoveredByNonParents, setDaysCoveredByNonParents] = useState(0)
@@ -468,7 +471,7 @@ export default function SharingChildcareLoad({
           Would sharing the childcare load help things?
         </h2>
         <p className="text-xs md:text-base text-gray-600 mb-2 md:mb-3">
-          Tax is calculated individually for each parent, but childcare costs are shared and the subsidy is based on your combined household income. Because tax rates are marginal, reducing a day of work that crosses into a higher tax bracket saves more in tax than reducing a day in a lower bracket. This means different arrangements with the same total days worked (e.g., 4+4 days vs 3+5 days) can result in different net household income, depending on which parent reduces days and whether it crosses a tax bracket. Use the calculator below to see which arrangement works best for your situation.
+          Tax is calculated individually for each parent, but childcare costs are shared and the subsidy is based on combined household income. Because tax rates are marginal, reducing a day of work that crosses into a higher tax bracket saves more in tax than reducing a day in a lower bracket. This means different arrangements with the same total days worked (e.g., 4+4 days vs 3+5 days) can result in different net household income, depending on which parent reduces days and whether it crosses a tax bracket. Use the calculator below to see which arrangement works best for different scenarios.
         </p>
       </div>
       
@@ -564,7 +567,7 @@ export default function SharingChildcareLoad({
       {/* Days Covered by Non-Parents */}
       <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-1">Support network care days</h3>
-        <p className="text-xs text-gray-600 mb-2">The number of days that you don't need childcare even though you're working. For example, if a grandparent or other family member cares for the children.</p>
+        <p className="text-xs text-gray-600 mb-2">Some families are fortunate enough to have a support network willing to look after children while the parents are working. This input configures the number of days that families don't need childcare for even though they're working. For example, if a grandparent or other family member cares for the children.</p>
         <div>
           <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
             Days per week
@@ -660,7 +663,7 @@ export default function SharingChildcareLoad({
         {bothFullTime && (
           <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4 rounded">
             <p className="text-xs md:text-sm text-gray-800">
-              <strong>Try adjusting the sliders above:</strong> Reduce the days worked by one or both parents to see how sharing the childcare load affects your household finances. You'll see the effective hourly rate for working an extra day, which can help you decide if it's worth it.
+              <strong>Try adjusting the sliders above:</strong> Reduce the days worked by one or both parents to see how sharing the childcare load affects household finances. The effective hourly rate for working an extra day shows what families actually earn after tax and childcare costs.
             </p>
           </div>
         )}
@@ -668,7 +671,7 @@ export default function SharingChildcareLoad({
         {(firstParentDays < 5 || secondParentDays < 5) && (
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 rounded">
             <p className="text-xs md:text-sm text-gray-800">
-              <strong>New perspective:</strong> Instead of thinking "it costs $X to work part-time", consider what you'd effectively earn per hour if you worked an <em>extra</em> day.
+              <strong>New perspective:</strong> Instead of thinking "it costs $X to work part-time", consider what people effectively earn per hour when they work an <em>extra</em> day after accounting for tax and childcare costs.
             </p>
           </div>
         )}
@@ -687,14 +690,6 @@ export default function SharingChildcareLoad({
                     {daysCoveredByParents} day{daysCoveredByParents !== 1 ? 's' : ''}
                   </span>
                 </div>
-                {firstParentDaysToAdd > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Additional paid work hours:</span>
-                    <span className="font-medium text-gray-900">
-                      {Math.round(firstParentHoursNotInPaidWork).toLocaleString()} hours/year
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Lost income (vs full-time):</span>
                   <span className="font-medium text-gray-900">
@@ -728,7 +723,7 @@ export default function SharingChildcareLoad({
                 {firstParentDaysToAdd > 0 && (
                   <div className="border-t-2 border-gray-300 pt-3 mt-3">
                     <p className="text-xs md:text-sm text-gray-600 mb-3">
-                      If you worked the extra days, what would your hourly pay be after tax and childcare?
+                    What is the effective hourly rate for working additional days to reach full-time (after tax and childcare)?
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -757,12 +752,12 @@ export default function SharingChildcareLoad({
                       </div>
                       {firstParentEffectiveHourlyRate < 0 && (
                         <p className="text-xs text-red-600 mt-1 text-right">
-                          You would be losing money by working full time
+                          Working full time results in a net loss
                         </p>
                       )}
                       {firstParentEffectiveHourlyRate >= 0 && firstParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
                         <p className="text-xs text-orange-600 mt-1 text-right">
-                          You would be working for less than minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                          Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
                         </p>
                       )}
                     </div>
@@ -785,14 +780,6 @@ export default function SharingChildcareLoad({
                     {daysCoveredBySecondParent} day{daysCoveredBySecondParent !== 1 ? 's' : ''}
                   </span>
                 </div>
-                {secondParentDaysToAdd > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Additional paid work hours:</span>
-                    <span className="font-medium text-gray-900">
-                      {Math.round(secondParentHoursNotInPaidWork).toLocaleString()} hours/year
-                    </span>
-                  </div>
-                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Lost income (vs full-time):</span>
                   <span className="font-medium text-gray-900">
@@ -826,7 +813,7 @@ export default function SharingChildcareLoad({
                 {secondParentDaysToAdd > 0 && (
                   <div className="border-t-2 border-gray-300 pt-3 mt-3">
                     <p className="text-xs md:text-sm text-gray-600 mb-3">
-                      If you worked the extra days, what would your hourly pay be after tax and childcare?
+                    What is the effective hourly rate for working additional days to reach full-time (after tax and childcare)?
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -855,12 +842,12 @@ export default function SharingChildcareLoad({
                       </div>
                       {secondParentEffectiveHourlyRate < 0 && (
                         <p className="text-xs text-red-600 mt-1 text-right">
-                          You would be losing money by working full time
+                          Working full time results in a net loss
                         </p>
                       )}
                       {secondParentEffectiveHourlyRate >= 0 && secondParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
                         <p className="text-xs text-orange-600 mt-1 text-right">
-                          You would be working for less than minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                          Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
                         </p>
                       )}
                     </div>

@@ -358,7 +358,7 @@ export default function HoursWorkedGraph({
       const point = graphData[index]
       const x = chart.scales.x.getPixelForValue(point.hoursPerWeek)
       const y = chart.scales.y.getPixelForValue(point.netIncome)
-      const note = point.netIncome < 0 ? 'Childcare costs more than you earn.' : undefined
+      const note = point.netIncome < 0 ? 'Childcare costs more than families earn.' : undefined
       const { takeHome, lines } = buildLinesFromPoint(point)
       setSelectedTooltip({
         x,
@@ -488,7 +488,7 @@ export default function HoursWorkedGraph({
       ? `$${netIncomeVal.toLocaleString()}`
       : `-$${Math.abs(netIncomeVal).toLocaleString()}`
     return {
-      takeHome: `You take home ${netIncome}`,
+      takeHome: `Net income: ${netIncome}`,
       lines: [
         `Tax: $${taxVal.toLocaleString()}`,
         `Childcare: $${childcareVal.toLocaleString()}`,
@@ -742,7 +742,7 @@ export default function HoursWorkedGraph({
           </table>
         </div>
         <p className="text-xs text-gray-500 mt-3">
-          Returns diminish because: (1) subsidy percentage decreases as income rises, and (2) once the 100-hour per fortnight subsidy cap is hit, extra hours are not subsidised so you pay the full rate.
+          Returns diminish because: (1) subsidy percentage decreases as income rises, and (2) once the 100-hour per fortnight subsidy cap is hit, extra hours are not subsidised so families pay the full rate.
         </p>
       </div>
       
@@ -844,11 +844,11 @@ export default function HoursWorkedGraph({
                     const minimumWageForHours = calculateMinimumWageAfterTaxForHours(currentHoursPoint.hoursPerWeek)
                     let note: string | undefined
                     if (currentHoursPoint.netIncome < 0) {
-                      note = 'You are losing money by working.'
+                      note = 'Families are losing money by working.'
                     } else if (currentHoursPoint.netIncome === 0) {
                       note = 'Household net income does not increase.'
                     } else if (currentHoursPoint.netIncome < minimumWageForHours) {
-                      note = 'You are earning less than minimum wage.'
+                      note = 'Families are earning less than minimum wage.'
                     }
                     const { takeHome, lines } = buildLinesFromPoint(currentHoursPoint)
                     setSelectedTooltip({
@@ -895,7 +895,7 @@ export default function HoursWorkedGraph({
                     const { takeHome, lines } = buildLinesFromPoint(pointToUse)
                     const hoursText = minWageIntersection.hoursPerWeek.toFixed(1)
                     const daysText = minWageIntersection.daysPerWeek.toFixed(1)
-                    const note = `Household income increase equals minimum wage. Working more hours results in household income increase below minimum wage, though you still take home money.`
+                    const note = `Household income increase equals minimum wage. Working more hours results in household income increase below minimum wage, though families still take home money.`
                     setSelectedTooltip({
                       x: markerPositions.minWageIntersection!.x,
                       y: markerPositions.minWageIntersection!.y,
@@ -1040,7 +1040,7 @@ export default function HoursWorkedGraph({
           {currentHoursPoint && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
-              <span>Your current hours: {secondParentHoursPerWeek}h/week ({currentHoursPoint.daysPerWeek.toFixed(1)} days/week)</span>
+              <span>Current hours: {secondParentHoursPerWeek}h/week ({currentHoursPoint.daysPerWeek.toFixed(1)} days/week)</span>
             </div>
           )}
           {breakEven && (
@@ -1116,7 +1116,7 @@ export default function HoursWorkedGraph({
             )}
           </p>
           <p className="text-sm text-gray-600">
-            As you work more hours per week, the number of childcare days increases proportionally (assuming 7.6 hours per work day). This affects both the total childcare cost and the subsidy you receive.
+            As families work more hours per week, the number of childcare days increases proportionally (assuming 7.6 hours per work day). This affects both the total childcare cost and the subsidy received.
           </p>
         </div>
       </SourceModal>
@@ -1213,8 +1213,8 @@ export default function HoursWorkedGraph({
             <h3 className="font-semibold text-gray-900 mb-2">The lines</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Blue solid line:</strong> Household income increase after tax and childcare costs.</li>
-              <li><strong>Green dashed line:</strong> Household income increase after tax only (without childcare costs). This shows what you'd earn if childcare were free.</li>
-              <li><strong>Red dashed line:</strong> Minimum wage (after tax) for the hours worked. This is a reference point to compare your earnings.</li>
+              <li><strong>Green dashed line:</strong> Household income increase after tax only (without childcare costs). This shows what families would earn if childcare were free.</li>
+              <li><strong>Red dashed line:</strong> Minimum wage (after tax) for the hours worked. This is a reference point to compare earnings.</li>
             </ul>
           </div>
           
@@ -1222,7 +1222,7 @@ export default function HoursWorkedGraph({
             <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Amber dot:</strong> The break-even point where household income increase equals $0 (household net income does not increase).</li>
-              <li><strong>Blue dot:</strong> Your current hours worked per week.</li>
+              <li><strong>Blue dot:</strong> Current hours worked per week.</li>
               <li><strong>Red dot:</strong> The point where household income increase equals minimum wage. Working more hours beyond this point results in household income increase below minimum wage.</li>
               <li><strong>Green dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
             </ul>
@@ -1243,18 +1243,18 @@ export default function HoursWorkedGraph({
               <li>The gap between the green and blue lines shows how much childcare costs reduce household income increase.</li>
               <li>If the blue line goes below $0, childcare costs more than the household income increase at those hours.</li>
               <li>The slope of the blue line shows how much household income increase changes for each additional hour worked. Notice how it can flatten or even decrease as hours increase due to subsidy changes.</li>
-              <li>When the blue line crosses below the red line, you're earning less than minimum wage (after accounting for childcare costs).</li>
+              <li>When the blue line crosses below the red line, families are earning less than minimum wage (after accounting for childcare costs).</li>
             </ul>
           </div>
           
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Why returns diminish</h3>
             <p className="text-gray-700 ml-2">
-              As you work more hours, household income increase per additional hour can decrease because:
+              As families work more hours, household income increase per additional hour can decrease because:
             </p>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-4">
-              <li>The childcare subsidy percentage decreases as your combined family income rises.</li>
-              <li>Once you hit the 100 hours per fortnight subsidy cap, additional hours of childcare are not subsidised, so you pay the full rate.</li>
+              <li>The childcare subsidy percentage decreases as combined family income rises.</li>
+              <li>Once families hit the 100 hours per fortnight subsidy cap, additional hours of childcare are not subsidised, so they pay the full rate.</li>
             </ul>
           </div>
         </div>
