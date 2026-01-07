@@ -279,6 +279,60 @@ export default function SharingChildcareLoad({
   // Family support breakdown
   const familySupportSavedChildcare = partTimeChildcareOutOfPocketWithoutSupport - partTimeChildcareOutOfPocket
   
+  // Calculate effective hourly rate for working an extra day
+  // This shows what you'd effectively earn per hour if you worked one more day per week
+  const HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY = HOURS_PER_DAY * 52 // 395.2 hours
+  
+  // Calculate the cost per day of childcare (annual)
+  // This is the cost that would be incurred if a parent worked one more day
+  const childcareCostPerDayAnnual = totalParentDaysCovering > 0
+    ? totalChildcareSavings / totalParentDaysCovering
+    : 0
+  
+  // For Parent 1: calculate effective rate if they worked one more day
+  const firstParentDaysToAdd = 5 - firstParentDays
+  // Hours not in paid work (the hours they're covering childcare instead of working)
+  const firstParentHoursNotInPaidWork = firstParentDaysToAdd > 0
+    ? firstParentDaysToAdd * HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY
+    : 0
+  // Extra income per year if they worked one more day (pro-rated)
+  const firstParentExtraIncomePerDay = firstParentDaysToAdd > 0 
+    ? firstParentLostIncomeAfterTax / firstParentDaysToAdd 
+    : 0
+  // Extra childcare cost if they worked one more day (they'd no longer cover that day)
+  // This is the cost of one day of childcare per year
+  const firstParentExtraChildcarePerDay = firstParentDaysToAdd > 0
+    ? childcareCostPerDayAnnual
+    : 0
+  const firstParentNetBenefitPerExtraDay = firstParentExtraIncomePerDay - firstParentExtraChildcarePerDay
+  const firstParentEffectiveHourlyRate = firstParentDaysToAdd > 0
+    ? firstParentNetBenefitPerExtraDay / HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY
+    : 0
+  
+  // For Parent 2: calculate effective rate if they worked one more day
+  const secondParentDaysToAdd = 5 - secondParentDays
+  // Hours not in paid work (the hours they're covering childcare instead of working)
+  const secondParentHoursNotInPaidWork = secondParentDaysToAdd > 0
+    ? secondParentDaysToAdd * HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY
+    : 0
+  // Extra income per year if they worked one more day (pro-rated)
+  const secondParentExtraIncomePerDay = secondParentDaysToAdd > 0
+    ? secondParentLostIncomeAfterTax / secondParentDaysToAdd
+    : 0
+  // Extra childcare cost if they worked one more day (they'd no longer cover that day)
+  // This is the cost of one day of childcare per year
+  const secondParentExtraChildcarePerDay = secondParentDaysToAdd > 0
+    ? childcareCostPerDayAnnual
+    : 0
+  const secondParentNetBenefitPerExtraDay = secondParentExtraIncomePerDay - secondParentExtraChildcarePerDay
+  const secondParentEffectiveHourlyRate = secondParentDaysToAdd > 0
+    ? secondParentNetBenefitPerExtraDay / HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY
+    : 0
+  
+  // Australian minimum wage after tax (approximate)
+  // Minimum wage is $23.23/hour gross, after tax at 19% (first bracket) ≈ $18.82/hour
+  const MINIMUM_WAGE_AFTER_TAX = 23.23 * 0.81 // Approximately $18.82/hour
+  
   // Prepare data for stacked bar chart
   // Stack order: Net Income Base (bottom), Family Support Benefit (on top of base), Childcare (middle), Tax (top)
   // Total height = Gross Income
@@ -603,6 +657,22 @@ export default function SharingChildcareLoad({
       <div className="bg-gray-50 border-2 border-gray-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <h3 className="text-xs md:text-base font-semibold text-gray-900 mb-3 md:mb-4">Cost/Benefit Breakdown</h3>
         
+        {bothFullTime && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4 rounded">
+            <p className="text-xs md:text-sm text-gray-800">
+              <strong>Try adjusting the sliders above:</strong> Reduce the days worked by one or both parents to see how sharing the childcare load affects your household finances. You'll see the effective hourly rate for working an extra day, which can help you decide if it's worth it.
+            </p>
+          </div>
+        )}
+        
+        {(firstParentDays < 5 || secondParentDays < 5) && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 rounded">
+            <p className="text-xs md:text-sm text-gray-800">
+              <strong>New perspective:</strong> Instead of thinking "it costs $X to work part-time", consider what you'd effectively earn per hour if you worked an <em>extra</em> day.
+            </p>
+          </div>
+        )}
+        
         <div className="space-y-4 md:space-y-6">
           {/* Parent 1 Breakdown */}
           {firstParentDays < 5 && (
@@ -617,6 +687,14 @@ export default function SharingChildcareLoad({
                     {daysCoveredByParents} day{daysCoveredByParents !== 1 ? 's' : ''}
                   </span>
                 </div>
+                {firstParentDaysToAdd > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Additional paid work hours:</span>
+                    <span className="font-medium text-gray-900">
+                      {Math.round(firstParentHoursNotInPaidWork).toLocaleString()} hours/year
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Lost income (vs full-time):</span>
                   <span className="font-medium text-gray-900">
@@ -647,6 +725,49 @@ export default function SharingChildcareLoad({
                     ${Math.round(Math.abs(firstParentNetCost)).toLocaleString()}
                   </span>
                 </div>
+                {firstParentDaysToAdd > 0 && (
+                  <div className="border-t-2 border-gray-300 pt-3 mt-3">
+                    <p className="text-xs md:text-sm text-gray-600 mb-3">
+                      If you worked the extra days, what would your hourly pay be after tax and childcare?
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Additional paid work hours:</span>
+                        <span className="font-medium text-gray-900">
+                          {Math.round(firstParentHoursNotInPaidWork).toLocaleString()} hours/year
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Net additional income:</span>
+                        <span className="font-medium text-gray-900">
+                          ${Math.round(firstParentNetBenefitPerExtraDay).toLocaleString()}/year
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold text-gray-900">Net hourly rate:</span>
+                        <span className={`font-bold text-base ${
+                          firstParentEffectiveHourlyRate < 0 
+                            ? 'text-red-600' 
+                            : firstParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX
+                            ? 'text-orange-600'
+                            : 'text-gray-900'
+                        }`}>
+                          ${firstParentEffectiveHourlyRate.toFixed(2)}/hour
+                        </span>
+                      </div>
+                      {firstParentEffectiveHourlyRate < 0 && (
+                        <p className="text-xs text-red-600 mt-1 text-right">
+                          You would be losing money by working full time
+                        </p>
+                      )}
+                      {firstParentEffectiveHourlyRate >= 0 && firstParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
+                        <p className="text-xs text-orange-600 mt-1 text-right">
+                          You would be working for less than minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -664,6 +785,14 @@ export default function SharingChildcareLoad({
                     {daysCoveredBySecondParent} day{daysCoveredBySecondParent !== 1 ? 's' : ''}
                   </span>
                 </div>
+                {secondParentDaysToAdd > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Additional paid work hours:</span>
+                    <span className="font-medium text-gray-900">
+                      {Math.round(secondParentHoursNotInPaidWork).toLocaleString()} hours/year
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Lost income (vs full-time):</span>
                   <span className="font-medium text-gray-900">
@@ -694,6 +823,49 @@ export default function SharingChildcareLoad({
                     ${Math.round(Math.abs(secondParentNetCost)).toLocaleString()}
                   </span>
                 </div>
+                {secondParentDaysToAdd > 0 && (
+                  <div className="border-t-2 border-gray-300 pt-3 mt-3">
+                    <p className="text-xs md:text-sm text-gray-600 mb-3">
+                      If you worked the extra days, what would your hourly pay be after tax and childcare?
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Additional paid work hours:</span>
+                        <span className="font-medium text-gray-900">
+                          {Math.round(secondParentHoursNotInPaidWork).toLocaleString()} hours/year
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Net additional income:</span>
+                        <span className="font-medium text-gray-900">
+                          ${Math.round(secondParentNetBenefitPerExtraDay).toLocaleString()}/year
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-semibold text-gray-900">Net hourly rate:</span>
+                        <span className={`font-bold text-base ${
+                          secondParentEffectiveHourlyRate < 0 
+                            ? 'text-red-600' 
+                            : secondParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX
+                            ? 'text-orange-600'
+                            : 'text-gray-900'
+                        }`}>
+                          ${secondParentEffectiveHourlyRate.toFixed(2)}/hour
+                        </span>
+                      </div>
+                      {secondParentEffectiveHourlyRate < 0 && (
+                        <p className="text-xs text-red-600 mt-1 text-right">
+                          You would be losing money by working full time
+                        </p>
+                      )}
+                      {secondParentEffectiveHourlyRate >= 0 && secondParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
+                        <p className="text-xs text-orange-600 mt-1 text-right">
+                          You would be working for less than minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
