@@ -155,7 +155,7 @@ export default function Calculator() {
     
     try {
       await navigator.clipboard.writeText(url)
-      setShareFeedback('Link to your scenario copied!')
+      setShareFeedback('Link to this scenario copied!')
       setTimeout(() => setShareFeedback(null), 3000)
     } catch {
       setShareFeedback('Failed to copy link')
@@ -301,7 +301,7 @@ export default function Calculator() {
           <p className="text-sm md:text-xl text-gray-700 max-w-2xl mx-auto">
             {familyType === 'single-parent' 
               ? 'See how much a single parent actually takes home after tax and childcare costs'
-              : 'See how much extra income your family gets when a second parent returns to work, after tax and childcare costs'}
+              : 'See how much extra income families get when a second parent returns to work, after tax and childcare costs'}
           </p>
         </header>
         
@@ -333,7 +333,7 @@ export default function Calculator() {
                 : 'Net increase in family income when second parent returns to work (after tax and childcare)'}
             </p>
             <p className="text-xs md:text-sm text-gray-500 mb-2 md:mb-3">
-              Using data for a typical Sydney family (click on the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span> for sources). Change to your own situation using the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span> icon.
+              Using data for a typical Sydney family (click on the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></span> for sources). Change to different scenarios using the <span className="inline-block w-3 h-3 align-middle mx-0.5"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg></span> icon.
             </p>
                 </div>
                 
@@ -595,7 +595,7 @@ export default function Calculator() {
                 </div>
                 {breakdown.netIncomeAfterChildcare < 0 && (
                   <p className="text-sm md:text-base font-semibold text-red-600 mt-2 mb-1">
-                    You're paying to work
+                    Families are paying to work
                   </p>
                 )}
                 {breakdown.netIncomeAfterChildcare >= 0 && isOutrageous && (
@@ -619,7 +619,7 @@ export default function Calculator() {
               The Diminishing Returns of Working More Days
             </h2>
             <p className="text-xs md:text-base text-gray-600">
-              As income increases, the subsidy percentage decreases. Once you hit the 100-hour per fortnight cap, extra hours aren't subsidized, so each additional day brings less net income.
+              As income increases, the subsidy percentage decreases. Once families hit the 100-hour per fortnight cap, extra hours aren't subsidized, so each additional day brings less net income.
             </p>
           </div>
           <HoursWorkedGraph
@@ -662,7 +662,7 @@ export default function Calculator() {
               <button
                 onClick={handleShare}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 md:px-6 md:py-3 bg-blue-600 text-white text-sm md:text-base font-medium rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                title="Share with your customized values"
+                title="Share with customized values"
                 aria-label="Share my scenario"
               >
                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -785,7 +785,7 @@ export default function Calculator() {
               : 'Both parents must meet the activity test, but the lower hours determine eligibility.'}
           </p>
           <p className="text-sm text-gray-600">
-            <strong>Note:</strong> Centres charge daily rates, not hourly. The subsidy cap is $14.63/hr (under school) or $12.81/hr (school age). You pay any difference out of pocket.
+            <strong>Note:</strong> Centres charge daily rates, not hourly. The subsidy cap is $14.63/hr (under school) or $12.81/hr (school age). Families pay any difference out of pocket.
           </p>
           <div className="text-sm text-gray-600 space-y-2">
             <p>
@@ -850,7 +850,7 @@ export default function Calculator() {
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            This is the <strong>session duration</strong>: hours your child is booked for care. Centres charge daily rates, which we convert to hourly for subsidy calculations.
+            This is the <strong>session duration</strong>: hours children are booked for care. Centres charge daily rates, which we convert to hourly for subsidy calculations.
           </p>
           <p className="text-gray-700">
             <strong>Typical hours:</strong>
@@ -860,7 +860,7 @@ export default function Calculator() {
             <li><strong>School age:</strong> 3.5 hours/day (before/after school care)</li>
           </ul>
           <p className="text-sm text-gray-600">
-            More hours = more of your daily cost is eligible for subsidy (up to the hourly cap: $14.63/hr under school, $12.81/hr school age).
+            More hours = more of the daily cost is eligible for subsidy (up to the hourly cap: $14.63/hr under school, $12.81/hr school age).
           </p>
           <p className="text-sm text-gray-600">
             <a href="https://www.education.gov.au/early-childhood/about/data-and-reports/quarterly-reports#toc-2025-2026" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -877,7 +877,7 @@ export default function Calculator() {
       >
         <div className="space-y-4">
           <p className="text-gray-700">
-            The subsidy only applies up to a maximum hourly rate. If your centre charges more, you pay the difference out of pocket.
+            The subsidy only applies up to a maximum hourly rate. If a centre charges more, families pay the difference out of pocket.
           </p>
           <p className="text-gray-700">
             <strong>2025-26 caps (Centre-Based Day Care):</strong>
@@ -887,7 +887,7 @@ export default function Calculator() {
             <li>School age: <strong>$12.81/hr</strong></li>
           </ul>
           <p className="text-sm text-gray-600">
-            <strong>Example:</strong> If your centre charges $18/hr, subsidy applies to $14.63/hr. You pay $3.37/hr plus your share of the subsidised portion.
+            <strong>Example:</strong> If a centre charges $18/hr, subsidy applies to $14.63/hr. Families pay $3.37/hr plus their share of the subsidised portion.
           </p>
           <p className="text-sm text-gray-600">
             <a href="https://www.education.gov.au/early-childhood/announcements/child-care-subsidy-hourly-rate-caps-are-changing-soon-0" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
