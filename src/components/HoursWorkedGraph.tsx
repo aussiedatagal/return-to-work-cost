@@ -24,7 +24,7 @@ import {
   calculateTotalCostsWithWorkDays,
   type HoursGraphDataPoint
 } from '../utils/hoursGraphData'
-import { calculateMinimumWageAfterTaxForHours } from '../utils/graphData'
+import { calculateMinimumWageAfterTaxForHours, MINIMUM_WAGE_AFTER_TAX } from '../utils/graphData'
 import { MIN_SUBSIDISED_HOURS, MAX_SUBSIDISED_HOURS } from '../utils/subsidyCalculations'
 import type { Child } from '../utils/subsidyCalculations'
 
@@ -463,6 +463,8 @@ export default function HoursWorkedGraph({
     minWageIntersection?: { x: number; y: number }
     maxIncome?: { x: number; y: number }
     chartArea?: { left: number; right: number; top: number; bottom: number }
+    breakEvenLineY?: number
+    minWageLineY?: number
   }>({})
   
   type TooltipData = {
@@ -519,6 +521,7 @@ export default function HoursWorkedGraph({
         x: xScale.getPixelForValue(breakEven.hoursPerWeek),
         y: yScale.getPixelForValue(0),
       }
+      positions.breakEvenLineY = yScale.getPixelForValue(0)
     }
 
     if (currentHoursPoint) {
@@ -534,6 +537,9 @@ export default function HoursWorkedGraph({
         y: yScale.getPixelForValue(minWageIntersection.netIncome),
       }
     }
+    
+    // Calculate y-position for full-time minimum wage horizontal line
+    positions.minWageLineY = yScale.getPixelForValue(MINIMUM_WAGE_AFTER_TAX)
 
     if (maxIncomePoint) {
       positions.maxIncome = {
@@ -799,20 +805,26 @@ export default function HoursWorkedGraph({
           </>
         )}
         
-        {/* Clickable Markers */}
+        {/* Horizontal Lines */}
         {markerPositions.chartArea && (
-          <div className="absolute inset-0 z-20 pointer-events-none">
-            {/* Break Even Marker */}
-            {breakEven && markerPositions.breakEven && (
-              <button
-                type="button"
+          <>
+            {/* Break Even Horizontal Line */}
+            {breakEven && markerPositions.breakEvenLineY !== undefined && (
+              <div 
+                className="absolute z-20 pointer-events-auto cursor-pointer touch-manipulation"
+                style={{
+                  left: `${markerPositions.chartArea.left}px`,
+                  top: `${markerPositions.breakEvenLineY - 1}px`,
+                  width: `${markerPositions.chartArea.right - markerPositions.chartArea.left}px`,
+                  height: '2px',
+                }}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (breakEven) {
                     const { takeHome, lines } = buildLinesFromPoint(breakEven)
                     setSelectedTooltip({
                       x: markerPositions.breakEven!.x,
-                      y: markerPositions.breakEven!.y,
+                      y: markerPositions.breakEvenLineY!,
                       title: `${breakEven.hoursPerWeek.toFixed(1)} hours/week (${breakEven.daysPerWeek.toFixed(1)} days/week)`,
                       takeHome,
                       lines,
@@ -821,18 +833,45 @@ export default function HoursWorkedGraph({
                     })
                   }
                 }}
-                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
-                style={{
-                  left: `${markerPositions.breakEven.x - 8}px`,
-                  top: `${markerPositions.breakEven.y - 8}px`,
-                  width: '16px',
-                  height: '16px',
-                }}
                 aria-label="Break-even point (no net income gain)"
               >
-                <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
-              </button>
+                <div className="w-full h-full bg-amber-500" />
+              </div>
             )}
+            
+            {/* Full-time Minimum Wage Horizontal Line */}
+            {markerPositions.minWageLineY !== undefined && (
+              <div 
+                className="absolute z-20 pointer-events-auto cursor-pointer touch-manipulation"
+                style={{
+                  left: `${markerPositions.chartArea.left}px`,
+                  top: `${markerPositions.minWageLineY - 1}px`,
+                  width: `${markerPositions.chartArea.right - markerPositions.chartArea.left}px`,
+                  height: '2px',
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedTooltip({
+                    x: markerPositions.chartArea!.left + (markerPositions.chartArea!.right - markerPositions.chartArea!.left) / 2,
+                    y: markerPositions.minWageLineY!,
+                    title: `Full-time minimum wage (38 hours/week)`,
+                    takeHome: `Full-time minimum wage after tax: $${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}`,
+                    lines: [`This is what a full-time minimum wage earner takes home after tax.`],
+                    note: 'Reference line showing full-time minimum wage after tax.',
+                    color: 'red'
+                  })
+                }}
+                aria-label="Full-time minimum wage after tax"
+              >
+                <div className="w-full h-full bg-red-500" />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Clickable Markers */}
+        {markerPositions.chartArea && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
 
             {/* Current Hours Marker */}
             {currentHoursPoint && markerPositions.current && (
@@ -875,50 +914,6 @@ export default function HoursWorkedGraph({
               </button>
             )}
 
-            {/* Minimum Wage Intersection Marker */}
-            {minWageIntersection && markerPositions.minWageIntersection && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  if (minWageIntersection) {
-                    // Find the actual data point for these hours to get correct tax and childcare values
-                    const actualPoint = findPointForHours(graphData, minWageIntersection.hoursPerWeek)
-                    const pointToUse = actualPoint || {
-                      hoursPerWeek: minWageIntersection.hoursPerWeek,
-                      daysPerWeek: minWageIntersection.daysPerWeek,
-                      netIncome: minWageIntersection.netIncome,
-                      grossIncome: 0,
-                      afterTax: 0,
-                      childcareCost: 0,
-                    }
-                    const { takeHome, lines } = buildLinesFromPoint(pointToUse)
-                    const hoursText = minWageIntersection.hoursPerWeek.toFixed(1)
-                    const daysText = minWageIntersection.daysPerWeek.toFixed(1)
-                    const note = `Household income increase equals minimum wage. Working more hours results in household income increase below minimum wage, though families still take home money.`
-                    setSelectedTooltip({
-                      x: markerPositions.minWageIntersection!.x,
-                      y: markerPositions.minWageIntersection!.y,
-                      title: `${hoursText} hours/week\n(${daysText} days/week)`,
-                      takeHome,
-                      lines,
-                      note,
-                      color: 'red'
-                    })
-                  }
-                }}
-                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
-                style={{
-                  left: `${markerPositions.minWageIntersection.x - (isMobile ? 5 : 8)}px`,
-                  top: `${markerPositions.minWageIntersection.y - (isMobile ? 5 : 8)}px`,
-                  width: isMobile ? '10px' : '16px',
-                  height: isMobile ? '10px' : '16px',
-                }}
-                aria-label="Minimum wage intersection point"
-              >
-                <div className={`${isMobile ? 'w-2.5 h-2.5 border' : 'w-4 h-4 border-2'} rounded-full bg-red-500 border-white shadow-lg hover:scale-125 transition-transform`} />
-              </button>
-            )}
 
             {/* Maximum Income Marker */}
             {maxIncomePoint && markerPositions.maxIncome && (
@@ -1045,18 +1040,14 @@ export default function HoursWorkedGraph({
           )}
           {breakEven && (
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0"></div>
+              <div className="w-4 h-0.5 bg-amber-500 flex-shrink-0"></div>
               <span>Break-even point (net income = $0) at {breakEven.hoursPerWeek.toFixed(1)}h/week ({breakEven.daysPerWeek.toFixed(1)} days/week)</span>
             </div>
           )}
-          {minWageIntersection && (
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0"></div>
-              <span>
-                At {minWageIntersection.hoursPerWeek.toFixed(1)}h/week ({minWageIntersection.daysPerWeek.toFixed(1)} days/week), household income increase equals minimum wage.
-              </span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-0.5 bg-red-500 flex-shrink-0"></div>
+            <span>Full-time minimum wage after tax (${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}/year)</span>
+          </div>
           {maxIncomePoint && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0"></div>
@@ -1219,11 +1210,11 @@ export default function HoursWorkedGraph({
           </div>
           
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">Markers and Reference Lines</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Amber dot:</strong> The break-even point where household income increase equals $0 (household net income does not increase).</li>
+              <li><strong>Amber horizontal line:</strong> The break-even point where household income increase equals $0 (household net income does not increase).</li>
+              <li><strong>Red horizontal line:</strong> Full-time minimum wage after tax. This shows what a full-time minimum wage earner takes home after tax.</li>
               <li><strong>Blue dot:</strong> Current hours worked per week.</li>
-              <li><strong>Red dot:</strong> The point where household income increase equals minimum wage. Working more hours beyond this point results in household income increase below minimum wage.</li>
               <li><strong>Green dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
             </ul>
           </div>

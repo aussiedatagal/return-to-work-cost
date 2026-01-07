@@ -18,7 +18,6 @@ import {
   findBreakEvenPoint, 
   findMinimumWageEquivalentPoint,
   findPointForIncome,
-  MINIMUM_WAGE_POST_TAX_HOURLY_RATE,
   MINIMUM_WAGE_AFTER_TAX
 } from '../utils/graphData'
 import { calculateAfterTaxIncome } from '../utils/taxCalculations'
@@ -312,6 +311,8 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     minWage?: { x: number; y: number }
     average?: { x: number; y: number }
     chartArea?: { left: number; right: number; top: number; bottom: number }
+    breakEvenLineY?: number
+    minWageLineY?: number
   }>({})
   type TooltipData = {
     x: number
@@ -365,6 +366,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
         x: xScale.getPixelForValue(breakEven.income),
         y: yScale.getPixelForValue(0),
       }
+      positions.breakEvenLineY = yScale.getPixelForValue(0)
     }
 
     if (minWageEquivalent) {
@@ -373,6 +375,9 @@ export default function IncomeGraph(props: IncomeGraphProps) {
         y: yScale.getPixelForValue(minWageEquivalent.netIncome),
       }
     }
+    
+    // Calculate y-position for full-time minimum wage horizontal line
+    positions.minWageLineY = yScale.getPixelForValue(MINIMUM_WAGE_AFTER_TAX)
 
     if (averageIncomePoint) {
       const avgIncome = selectedSecondParentIncome ?? defaultSecondParentIncome
@@ -482,7 +487,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     <div className="bg-white rounded-lg p-2 md:p-6 border border-gray-200">
       <div className="flex items-center justify-center gap-2 mb-2 md:mb-4">
         <h3 className="text-sm md:text-xl font-semibold text-gray-900 px-1 md:px-0 text-center">
-          {familyType === 'single-parent' ? "Net Income After Tax & Childcare" : "Net Household Income Increase After Tax & Childcare"}
+          Net household income increase by second parent's gross full time income
         </h3>
         <button
           type="button"
@@ -496,6 +501,10 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           </svg>
         </button>
       </div>
+      
+      <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 px-1 md:px-0 text-center">
+        There are many good reasons for parents to return to work, but the net household income increase is often small because childcare costs consume a significant amount of household income. This graph shows how much extra income families actually pocket when a parent returns to work full time, after tax and childcare costs.
+      </p>
       
       <div className="w-full relative md:h-[420px] h-[340px] min-h-[340px]">
         <div 
@@ -535,13 +544,19 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           </>
         )}
         
-        {/* Clickable Markers */}
+        {/* Horizontal Lines */}
         {markerPositions.chartArea && (
-          <div className="absolute inset-0 z-20 pointer-events-none">
-            {/* Break Even Marker */}
-            {breakEven && markerPositions.breakEven && (
-              <button
-                type="button"
+          <>
+            {/* Break Even Horizontal Line */}
+            {breakEven && markerPositions.breakEvenLineY !== undefined && (
+              <div 
+                className="absolute z-20 pointer-events-auto cursor-pointer touch-manipulation"
+                style={{
+                  left: `${markerPositions.chartArea.left}px`,
+                  top: `${markerPositions.breakEvenLineY - 1}px`,
+                  width: `${markerPositions.chartArea.right - markerPositions.chartArea.left}px`,
+                  height: '2px',
+                }}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (breakEven) {
@@ -550,7 +565,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                       const { takeHome, lines } = buildLinesFromPoint(point)
                       setSelectedTooltip({
                         x: chartRef.current.scales.x.getPixelForValue(breakEven.income),
-                        y: chartRef.current.scales.y.getPixelForValue(point.netIncome),
+                        y: markerPositions.breakEvenLineY!,
                         title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
                         takeHome,
                         lines,
@@ -560,53 +575,45 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                     }
                   }
                 }}
-                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
-                style={{
-                  left: `${markerPositions.breakEven.x - 8}px`,
-                  top: `${markerPositions.breakEven.y - 8}px`,
-                  width: '16px',
-                  height: '16px',
-                }}
                 aria-label="Break-even point (no net income gain)"
               >
-                <div className="w-4 h-4 rounded-full bg-amber-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
-              </button>
+                <div className="w-full h-full bg-amber-500" />
+              </div>
             )}
-
-            {/* Minimum Wage Equivalent Marker */}
-            {minWageEquivalent && markerPositions.minWage && (
-              <button
-                type="button"
+            
+            {/* Full-time Minimum Wage Horizontal Line */}
+            {markerPositions.minWageLineY !== undefined && (
+              <div 
+                className="absolute z-20 pointer-events-auto cursor-pointer touch-manipulation"
+                style={{
+                  left: `${markerPositions.chartArea.left}px`,
+                  top: `${markerPositions.minWageLineY - 1}px`,
+                  width: `${markerPositions.chartArea.right - markerPositions.chartArea.left}px`,
+                  height: '2px',
+                }}
                 onClick={(e) => {
                   e.stopPropagation()
-                  if (minWageEquivalent) {
-                    const point = findPointForIncome(graphData, minWageEquivalent.income)
-                    if (point && chartRef.current?.scales.x && chartRef.current?.scales.y) {
-                      const { takeHome, lines } = buildLinesFromPoint(point)
-                      setSelectedTooltip({
-                        x: chartRef.current.scales.x.getPixelForValue(minWageEquivalent.income),
-                        y: chartRef.current.scales.y.getPixelForValue(point.netIncome),
-                        title: `Gross income: $${Math.round(point.grossIncome).toLocaleString()}`,
-                        takeHome,
-                        lines,
-                        note: 'Families are working at minimum wage.',
-                        color: 'red'
-                      })
-                    }
-                  }
+                  setSelectedTooltip({
+                    x: markerPositions.chartArea!.left + (markerPositions.chartArea!.right - markerPositions.chartArea!.left) / 2,
+                    y: markerPositions.minWageLineY!,
+                    title: `Full-time minimum wage`,
+                    takeHome: `Full-time minimum wage after tax: $${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}`,
+                    lines: [`This is what a full-time minimum wage earner takes home after tax.`],
+                    note: 'Reference line showing full-time minimum wage after tax.',
+                    color: 'red'
+                  })
                 }}
-                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
-                style={{
-                  left: `${markerPositions.minWage.x - 8}px`,
-                  top: `${markerPositions.minWage.y - 8}px`,
-                  width: '16px',
-                  height: '16px',
-                }}
-                aria-label="Minimum wage equivalent point"
+                aria-label="Full-time minimum wage after tax"
               >
-                <div className="w-4 h-4 rounded-full bg-red-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
-              </button>
+                <div className="w-full h-full bg-red-500" />
+              </div>
             )}
+          </>
+        )}
+
+        {/* Clickable Markers */}
+        {markerPositions.chartArea && (
+          <div className="absolute inset-0 z-20 pointer-events-none">
 
             {/* Average Income / Current Income Marker */}
             {averageIncomePoint && markerPositions.average && (
@@ -733,7 +740,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
               <span className="flex items-center flex-wrap gap-x-1">
                 {isUsingDefaultIncome ? (
                   <>
-                    Median income for a woman in Sydney
+                    Median full-time income for a woman in Sydney
                     {onOpenSourceModal && (
                       <button
                         type="button"
@@ -753,15 +760,13 @@ export default function IncomeGraph(props: IncomeGraphProps) {
               </span>
             </div>
           )}
-          {minWageEquivalent && (
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0"></div>
-              <span>Minimum wage equivalent (${MINIMUM_WAGE_POST_TAX_HOURLY_RATE.toFixed(2)}/hr after tax, excluding any childcare costs)</span>
-            </div>
-          )}
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-0.5 bg-red-500 flex-shrink-0"></div>
+            <span>Full-time minimum wage after tax (${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}/year)</span>
+          </div>
           {breakEven && (
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0"></div>
+              <div className="w-4 h-0.5 bg-amber-500 flex-shrink-0"></div>
               <span>Break-even point (net income = $0)</span>
             </div>
           )}
@@ -833,10 +838,10 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           </div>
           
           <div>
-            <h3 className="font-semibold text-gray-900 mb-2">Markers</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">Markers and Reference Lines</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>Amber dot:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
-              <li><strong>Red dot:</strong> The point where household income increase equals minimum wage (after tax).</li>
+              <li><strong>Amber horizontal line:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
+              <li><strong>Red horizontal line:</strong> Full-time minimum wage after tax. This shows what a full-time minimum wage earner takes home after tax.</li>
               <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'The current income level.'}</li>
             </ul>
           </div>
@@ -846,7 +851,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Hover:</strong> Move your mouse over the graph to see a crosshair showing values at that income level.</li>
               <li><strong>Click:</strong> Click anywhere on the blue line to see a detailed breakdown of tax, childcare costs, and net income for that income level.</li>
-              <li><strong>Click markers:</strong> Click the colored dots to see detailed information about those specific points.</li>
+              <li><strong>Click markers and lines:</strong> Click the colored dots or horizontal lines to see detailed information about those specific points.</li>
             </ul>
           </div>
           
