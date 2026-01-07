@@ -299,9 +299,7 @@ export default function Calculator() {
             The Real Cost of Returning to Work
           </h1>
           <p className="text-sm md:text-xl text-gray-700 max-w-2xl mx-auto">
-            {familyType === 'single-parent' 
-              ? 'See how much a single parent actually takes home after tax and childcare costs'
-              : 'See how much extra income families get when a second parent returns to work, after tax and childcare costs'}
+            How much is childcare really costing?
           </p>
         </header>
         
