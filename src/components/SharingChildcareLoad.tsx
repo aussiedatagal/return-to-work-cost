@@ -336,6 +336,13 @@ export default function SharingChildcareLoad({
   // Minimum wage is $23.23/hour gross, after tax at 19% (first bracket) ≈ $18.82/hour
   const MINIMUM_WAGE_AFTER_TAX = 23.23 * 0.81 // Approximately $18.82/hour
   
+  // Calculate combined effective hourly rate if both parents worked additional days to reach full-time
+  const totalAdditionalHours = firstParentHoursNotInPaidWork + secondParentHoursNotInPaidWork
+  const totalNetBenefitForAdditionalDays = firstParentNetBenefitPerExtraDay + secondParentNetBenefitPerExtraDay
+  const combinedEffectiveHourlyRate = totalAdditionalHours > 0
+    ? totalNetBenefitForAdditionalDays / totalAdditionalHours
+    : 0
+  
   // Prepare data for stacked bar chart
   // Stack order: Net Income Base (bottom), Family Support Benefit (on top of base), Childcare (middle), Tax (top)
   // Total height = Gross Income
@@ -957,6 +964,38 @@ export default function SharingChildcareLoad({
                 ${Math.round(partTimeNetIncome - fullTimeNetIncome).toLocaleString()}/year
               </span>
             </div>
+            {totalAdditionalHours > 0 && (
+              <>
+                <div className="flex justify-between border-t-2 border-gray-300 pt-2 mt-2">
+                  <span className="text-gray-600">Hours not in paid work:</span>
+                  <span className="font-medium text-gray-900">
+                    {Math.round(totalAdditionalHours).toLocaleString()} hours/year
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-gray-900">Effective net hourly rate to work:</span>
+                  <span className={`font-bold text-base ${
+                    combinedEffectiveHourlyRate < 0 
+                      ? 'text-red-600' 
+                      : combinedEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX
+                      ? 'text-orange-600'
+                      : 'text-gray-900'
+                  }`}>
+                    ${combinedEffectiveHourlyRate.toFixed(2)}/hour
+                  </span>
+                </div>
+                {combinedEffectiveHourlyRate < 0 && (
+                  <p className="text-xs text-red-600 mt-1 text-right">
+                    Working full time results in a net loss
+                  </p>
+                )}
+                {combinedEffectiveHourlyRate >= 0 && combinedEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
+                  <p className="text-xs text-orange-600 mt-1 text-right">
+                    Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}
