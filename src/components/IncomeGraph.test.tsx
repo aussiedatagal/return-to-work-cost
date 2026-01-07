@@ -36,7 +36,7 @@ describe('IncomeGraph', () => {
       />
     )
     
-    expect(screen.getByText("Net Household Income Increase After Tax & Childcare")).toBeInTheDocument()
+    expect(screen.getByText(/Net household income increase by second parent's gross full time income/i)).toBeInTheDocument()
   })
 
   it('displays break-even point in legend when break-even exists', async () => {
@@ -87,7 +87,7 @@ describe('IncomeGraph', () => {
       />
     )
     
-    expect(screen.getByText("Net Household Income Increase After Tax & Childcare")).toBeInTheDocument()
+    expect(screen.getByText(/Net household income increase by second parent's gross full time income/i)).toBeInTheDocument()
   })
 
   it('renders chart component', async () => {

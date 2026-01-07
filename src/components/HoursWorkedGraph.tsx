@@ -24,7 +24,7 @@ import {
   calculateTotalCostsWithWorkDays,
   type HoursGraphDataPoint
 } from '../utils/hoursGraphData'
-import { calculateMinimumWageAfterTaxForHours, MINIMUM_WAGE_AFTER_TAX } from '../utils/graphData'
+import { calculateMinimumWageAfterTaxForHours } from '../utils/graphData'
 import { MIN_SUBSIDISED_HOURS, MAX_SUBSIDISED_HOURS } from '../utils/subsidyCalculations'
 import type { Child } from '../utils/subsidyCalculations'
 
@@ -464,7 +464,6 @@ export default function HoursWorkedGraph({
     maxIncome?: { x: number; y: number }
     chartArea?: { left: number; right: number; top: number; bottom: number }
     breakEvenLineY?: number
-    minWageLineY?: number
   }>({})
   
   type TooltipData = {
@@ -474,7 +473,7 @@ export default function HoursWorkedGraph({
     takeHome: string
     lines: string[]
     note?: string
-    color: 'amber' | 'red' | 'blue' | 'green' | 'neutral'
+    color: 'amber' | 'red' | 'blue' | 'green' | 'purple' | 'neutral'
   }
   const [selectedTooltip, setSelectedTooltip] = useState<TooltipData | null>(null)
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number; hours: number; netIncome: number } | null>(null)
@@ -537,9 +536,6 @@ export default function HoursWorkedGraph({
         y: yScale.getPixelForValue(minWageIntersection.netIncome),
       }
     }
-    
-    // Calculate y-position for full-time minimum wage horizontal line
-    positions.minWageLineY = yScale.getPixelForValue(MINIMUM_WAGE_AFTER_TAX)
 
     if (maxIncomePoint) {
       positions.maxIncome = {
@@ -839,33 +835,6 @@ export default function HoursWorkedGraph({
               </div>
             )}
             
-            {/* Full-time Minimum Wage Horizontal Line */}
-            {markerPositions.minWageLineY !== undefined && (
-              <div 
-                className="absolute z-20 pointer-events-auto cursor-pointer touch-manipulation"
-                style={{
-                  left: `${markerPositions.chartArea.left}px`,
-                  top: `${markerPositions.minWageLineY - 1}px`,
-                  width: `${markerPositions.chartArea.right - markerPositions.chartArea.left}px`,
-                  height: '2px',
-                }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setSelectedTooltip({
-                    x: markerPositions.chartArea!.left + (markerPositions.chartArea!.right - markerPositions.chartArea!.left) / 2,
-                    y: markerPositions.minWageLineY!,
-                    title: `Full-time minimum wage (38 hours/week)`,
-                    takeHome: `Full-time minimum wage after tax: $${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}`,
-                    lines: [`This is what a full-time minimum wage earner takes home after tax.`],
-                    note: 'Reference line showing full-time minimum wage after tax.',
-                    color: 'red'
-                  })
-                }}
-                aria-label="Full-time minimum wage after tax"
-              >
-                <div className="w-full h-full bg-red-500" />
-              </div>
-            )}
           </>
         )}
 
@@ -915,6 +884,42 @@ export default function HoursWorkedGraph({
             )}
 
 
+            {/* Minimum Wage Intersection Marker */}
+            {minWageIntersection && markerPositions.minWageIntersection && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (minWageIntersection) {
+                    const intersectionPoint = findPointForHours(graphData, minWageIntersection.hoursPerWeek)
+                    if (intersectionPoint) {
+                      const { takeHome, lines } = buildLinesFromPoint(intersectionPoint)
+                      const note = `At this point, net income (after tax and childcare) equals minimum wage (after tax without childcare) for the hours worked.`
+                      setSelectedTooltip({
+                        x: markerPositions.minWageIntersection!.x,
+                        y: markerPositions.minWageIntersection!.y,
+                        title: `${minWageIntersection.hoursPerWeek.toFixed(1)} hours/week (${minWageIntersection.daysPerWeek.toFixed(1)} days/week)`,
+                        takeHome,
+                        lines,
+                        note,
+                        color: 'red'
+                      })
+                    }
+                  }
+                }}
+                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
+                style={{
+                  left: `${markerPositions.minWageIntersection.x - (isMobile ? 5 : 8)}px`,
+                  top: `${markerPositions.minWageIntersection.y - (isMobile ? 5 : 8)}px`,
+                  width: isMobile ? '10px' : '16px',
+                  height: isMobile ? '10px' : '16px',
+                }}
+                aria-label="Minimum wage intersection point"
+              >
+                <div className={`${isMobile ? 'w-2.5 h-2.5 border' : 'w-4 h-4 border-2'} rounded-full bg-red-500 border-white shadow-lg hover:scale-125 transition-transform`} />
+              </button>
+            )}
+
             {/* Maximum Income Marker */}
             {maxIncomePoint && markerPositions.maxIncome && (
               <button
@@ -933,7 +938,7 @@ export default function HoursWorkedGraph({
                       takeHome,
                       lines,
                       note,
-                      color: 'green'
+                      color: 'purple'
                     })
                   }
                 }}
@@ -946,7 +951,7 @@ export default function HoursWorkedGraph({
                 }}
                 aria-label="Maximum income point"
               >
-                <div className={`${isMobile ? 'w-2.5 h-2.5 border' : 'w-4 h-4 border-2'} rounded-full bg-green-500 border-white shadow-lg hover:scale-125 transition-transform`} />
+                <div className={`${isMobile ? 'w-2.5 h-2.5 border' : 'w-4 h-4 border-2'} rounded-full bg-purple-500 border-white shadow-lg hover:scale-125 transition-transform`} />
               </button>
             )}
           </div>
@@ -981,6 +986,7 @@ export default function HoursWorkedGraph({
                 : pos.color === 'red' ? 'bg-red-500 border-red-600'
                 : pos.color === 'blue' ? 'bg-blue-500 border-blue-600'
                 : pos.color === 'green' ? 'bg-green-500 border-green-600'
+                : pos.color === 'purple' ? 'bg-purple-500 border-purple-600'
                 : 'bg-gray-900 border-gray-700'
 
               return (
@@ -1030,7 +1036,7 @@ export default function HoursWorkedGraph({
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 border-t-2 border-red-500 border-dashed flex-shrink-0"></div>
-            <span>Minimum wage (after tax) for hours worked</span>
+            <span>Minimum wage (after tax, without childcare) for hours worked</span>
           </div>
           {currentHoursPoint && (
             <div className="flex items-center space-x-2">
@@ -1044,13 +1050,15 @@ export default function HoursWorkedGraph({
               <span>Break-even point (net income = $0) at {breakEven.hoursPerWeek.toFixed(1)}h/week ({breakEven.daysPerWeek.toFixed(1)} days/week)</span>
             </div>
           )}
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-0.5 bg-red-500 flex-shrink-0"></div>
-            <span>Full-time minimum wage after tax (${Math.round(MINIMUM_WAGE_AFTER_TAX).toLocaleString()}/year)</span>
-          </div>
+          {minWageIntersection && (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-red-500 flex-shrink-0"></div>
+              <span>Net income (after tax and childcare) equals minimum wage (after tax without childcare) at {minWageIntersection.hoursPerWeek.toFixed(1)}h/week ({minWageIntersection.daysPerWeek.toFixed(1)} days/week)</span>
+            </div>
+          )}
           {maxIncomePoint && (
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-green-500 flex-shrink-0"></div>
+              <div className="w-4 h-4 rounded-full bg-purple-500 flex-shrink-0"></div>
               <span>
                 Maximum net income at {maxIncomePoint.hoursPerWeek.toFixed(1)}h/week ({maxIncomePoint.daysPerWeek.toFixed(1)} days/week)
               </span>
@@ -1205,7 +1213,7 @@ export default function HoursWorkedGraph({
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Blue solid line:</strong> Household income increase after tax and childcare costs.</li>
               <li><strong>Green dashed line:</strong> Household income increase after tax only (without childcare costs). This shows what families would earn if childcare were free.</li>
-              <li><strong>Red dashed line:</strong> Minimum wage (after tax) for the hours worked. This is a reference point to compare earnings.</li>
+              <li><strong>Red dashed line:</strong> Minimum wage (after tax, without childcare) for the hours worked. This is a reference point to compare earnings, showing what someone would earn at minimum wage without childcare costs.</li>
             </ul>
           </div>
           
@@ -1213,9 +1221,9 @@ export default function HoursWorkedGraph({
             <h3 className="font-semibold text-gray-900 mb-2">Markers and Reference Lines</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Amber horizontal line:</strong> The break-even point where household income increase equals $0 (household net income does not increase).</li>
-              <li><strong>Red horizontal line:</strong> Full-time minimum wage after tax. This shows what a full-time minimum wage earner takes home after tax.</li>
               <li><strong>Blue dot:</strong> Current hours worked per week.</li>
-              <li><strong>Green dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
+              <li><strong>Red dot:</strong> The point where net income (after tax and childcare) equals minimum wage (after tax without childcare) for the hours worked.</li>
+              <li><strong>Purple dot:</strong> The point where household income increase is highest. Working more hours beyond this point results in lower household income increase.</li>
             </ul>
           </div>
           
