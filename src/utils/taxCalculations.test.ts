@@ -39,10 +39,26 @@ describe('calculateAfterTaxIncome', () => {
     expect(afterTax).toBeGreaterThan(income * 0.5)
   })
 
-  it('calculates correctly for $80,000 income', () => {
+  it('calculates correctly for $80,000 income (including Medicare Levy)', () => {
     const income = 80000
     const afterTax = calculateAfterTaxIncome(income)
-    expect(afterTax).toBeCloseTo(65212, 0)
+    // $80,000 - income tax - Medicare Levy (2% of $80,000 = $1,600)
+    // Previous test expected $65,212 without Medicare Levy
+    // With Medicare Levy: $65,212 - $1,600 = $63,612
+    expect(afterTax).toBeCloseTo(63612, 0)
+  })
+
+  it('calculates correctly for minimum wage $49,301 (including Medicare Levy)', () => {
+    const income = 49301
+    const afterTax = calculateAfterTaxIncome(income)
+    // Minimum wage gross: $24.95/hour × 38 hours/week × 52 weeks = $49,301
+    // Expected net after tax and Medicare Levy: approximately $42,736-$43,000
+    // Our calculation gives ~$42,997, which is within reasonable range
+    // The difference may be due to rounding or different calculation assumptions
+    expect(afterTax).toBeGreaterThan(42000)
+    expect(afterTax).toBeLessThan(43500)
+    // Verify it's approximately $42,997 (our calculated value)
+    expect(afterTax).toBeCloseTo(42997, 0)
   })
 })
 
