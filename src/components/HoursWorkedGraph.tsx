@@ -743,9 +743,13 @@ export default function HoursWorkedGraph({
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-gray-500 mt-3">
-          Returns diminish because: (1) subsidy percentage decreases as income rises, and (2) once the 100-hour per fortnight subsidy cap is hit, extra hours are not subsidised so families pay the full rate.
-        </p>
+        <div className="text-xs text-gray-500 mt-3">
+          <p className="mb-2">Why the drop? Two reasons:</p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Higher family income lowers your subsidy percentage for every day of care, not just the new one</li>
+            <li>The 100-hour cap means that often the final hours of a full-time fortnight are completely unsubsidised</li>
+          </ul>
+        </div>
       </div>
       
       <div className="flex items-center justify-center gap-2 mb-2 md:mb-4">
