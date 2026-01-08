@@ -59,11 +59,12 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     secondParentHoursPerFortnight,
     selectedSecondParentIncome,
     defaultSecondParentIncome = 94103,
+    defaultFirstParentIncome = 104496,
     onOpenSourceModal,
     familyType = 'two-parent'
   } = props
   // Props not used in this component but part of API for consistency:
-  // onConfigureFirstParentIncome, onConfigureChildren, onConfigureSecondParentIncome, defaultFirstParentIncome
+  // onConfigureFirstParentIncome, onConfigureChildren, onConfigureSecondParentIncome
   const chartRef = useRef<ChartJS<'line'>>(null)
   const targetSecondParentIncome = selectedSecondParentIncome ?? defaultSecondParentIncome
   const xMaxIncome = useMemo(() => {
@@ -106,6 +107,10 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     const targetIncome = selectedSecondParentIncome ?? defaultSecondParentIncome
     return findPointForIncome(graphData, targetIncome)
   }, [graphData, selectedSecondParentIncome, defaultSecondParentIncome])
+
+  const maleMedianIncomePoint = useMemo(() => {
+    return findPointForIncome(graphData, defaultFirstParentIncome)
+  }, [graphData, defaultFirstParentIncome])
   
   // Calculate minimum wage equivalent for actual hours worked
   const minimumWageForHours = useMemo(() => {
@@ -117,6 +122,9 @@ export default function IncomeGraph(props: IncomeGraphProps) {
   }, [secondParentHoursPerFortnight])
 
   const isUsingDefaultIncome = !selectedSecondParentIncome || selectedSecondParentIncome === defaultSecondParentIncome
+  
+  // State to track which median income is shown (female or male)
+  const [shownMedianIncome, setShownMedianIncome] = useState<'female' | 'male'>('female')
   
   // Detect mobile view with state that updates on resize
   const [isMobile, setIsMobile] = useState(() => 
@@ -234,7 +242,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
         type: 'linear',
       title: {
           display: true,
-        text: familyType === 'single-parent' ? "Gross income" : "Gross income",
+        text: "Gross full-time salary",
           font: {
             size: 12,
           },
@@ -262,7 +270,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
       y: {
         title: {
           display: true,
-          text: 'Net income',
+          text: 'Net household income increase after tax and childcare',
           font: {
             size: isMobile ? 11 : 12,
           },
@@ -310,6 +318,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     breakEven?: { x: number; y: number }
     minWage?: { x: number; y: number }
     average?: { x: number; y: number }
+    maleMedian?: { x: number; y: number }
     chartArea?: { left: number; right: number; top: number; bottom: number }
     breakEvenLineY?: number
     minWageLineY?: number
@@ -321,7 +330,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     takeHome: string
     lines: string[]
     note?: string
-    color: 'amber' | 'red' | 'blue' | 'neutral'
+    color: 'amber' | 'red' | 'blue' | 'green' | 'teal' | 'neutral'
   }
   const [selectedTooltip, setSelectedTooltip] = useState<TooltipData | null>(null)
   const [hoverPosition, setHoverPosition] = useState<{ x: number; y: number; income: number; netIncome: number } | null>(null)
@@ -379,7 +388,9 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     // Calculate y-position for full-time minimum wage horizontal line
     positions.minWageLineY = yScale.getPixelForValue(MINIMUM_WAGE_AFTER_TAX)
 
-    if (averageIncomePoint) {
+    // Show female median when using default income and shownMedianIncome is 'female'
+    // Or show custom income when not using default
+    if (averageIncomePoint && (isUsingDefaultIncome ? shownMedianIncome === 'female' : true)) {
       const avgIncome = selectedSecondParentIncome ?? defaultSecondParentIncome
       positions.average = {
         x: xScale.getPixelForValue(avgIncome),
@@ -387,8 +398,16 @@ export default function IncomeGraph(props: IncomeGraphProps) {
       }
     }
 
+    // Show male median only when using default income and shownMedianIncome is 'male'
+    if (maleMedianIncomePoint && isUsingDefaultIncome && shownMedianIncome === 'male') {
+      positions.maleMedian = {
+        x: xScale.getPixelForValue(defaultFirstParentIncome),
+        y: yScale.getPixelForValue(maleMedianIncomePoint.netIncome),
+      }
+    }
+
     setMarkerPositions(positions)
-  }, [breakEven, minWageEquivalent, averageIncomePoint, selectedSecondParentIncome, defaultSecondParentIncome])
+  }, [breakEven, minWageEquivalent, averageIncomePoint, maleMedianIncomePoint, selectedSecondParentIncome, defaultSecondParentIncome, defaultFirstParentIncome, shownMedianIncome, isUsingDefaultIncome])
 
   useEffect(() => {
     recalcMarkerPositions()
@@ -487,7 +506,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
     <div className="bg-white rounded-lg p-2 md:p-6 border border-gray-200">
       <div className="flex items-center justify-center gap-2 mb-2 md:mb-4">
         <h3 className="text-sm md:text-xl font-semibold text-gray-900 px-1 md:px-0 text-center">
-          Net household income increase by second parent's gross full time income
+          Actual Household Income Gain vs. Returning Full-time Salary
         </h3>
         <button
           type="button"
@@ -503,7 +522,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
       </div>
       
       <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 px-1 md:px-0 text-center">
-        There are many good reasons for parents to return to work, but the net household income increase is often small because childcare costs consume a significant amount of household income. This graph shows how much extra income families actually pocket when a parent returns to work full time, after tax and childcare costs.
+        See the actual increase in your family's take-home pay when a parent returns to full-time work, after tax and childcare fees.
       </p>
       
       <div className="w-full relative md:h-[420px] h-[340px] min-h-[340px]">
@@ -633,7 +652,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                       } else if (Math.abs(point.netIncome - minimumWageForHours) < 1) {
                         note = 'Families are working at minimum wage.'
                       } else if (point.netIncome < minimumWageForHours) {
-                        note = 'Families are earning less than minimum wage.'
+                        note = 'Net household income is increased by less than minimum wage for the hours worked.'
                       }
                       const { takeHome, lines } = buildLinesFromPoint(point)
                       setSelectedTooltip({
@@ -656,6 +675,37 @@ export default function IncomeGraph(props: IncomeGraphProps) {
                   height: '16px',
                 }}
                 aria-label={isUsingDefaultIncome ? 'Average income point' : 'Current income point'}
+              >
+                <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
+              </button>
+            )}
+
+            {/* Male Median Income Marker */}
+            {maleMedianIncomePoint && markerPositions.maleMedian && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (maleMedianIncomePoint && chartRef.current?.scales.x && chartRef.current?.scales.y) {
+                    const { takeHome, lines } = buildLinesFromPoint(maleMedianIncomePoint)
+                    setSelectedTooltip({
+                      x: chartRef.current.scales.x.getPixelForValue(defaultFirstParentIncome),
+                      y: chartRef.current.scales.y.getPixelForValue(maleMedianIncomePoint.netIncome),
+                      title: `Gross income: $${Math.round(maleMedianIncomePoint.grossIncome).toLocaleString()}`,
+                      takeHome,
+                      lines,
+                      color: 'blue'
+                    })
+                  }
+                }}
+                className="absolute cursor-pointer touch-manipulation pointer-events-auto"
+                style={{
+                  left: `${markerPositions.maleMedian.x - 8}px`,
+                  top: `${markerPositions.maleMedian.y - 8}px`,
+                  width: '16px',
+                  height: '16px',
+                }}
+                aria-label="Male median income point"
               >
                 <div className="w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-lg hover:scale-125 transition-transform" />
               </button>
@@ -691,6 +741,8 @@ export default function IncomeGraph(props: IncomeGraphProps) {
               const bgColorClass = pos.color === 'amber' ? 'bg-amber-500 border-amber-600' 
                 : pos.color === 'red' ? 'bg-red-500 border-red-600'
                 : pos.color === 'blue' ? 'bg-blue-500 border-blue-600'
+                : pos.color === 'green' ? 'bg-green-500 border-green-600'
+                : pos.color === 'teal' ? 'bg-teal-500 border-teal-600'
                 : 'bg-gray-900 border-gray-700'
 
               return (
@@ -734,28 +786,68 @@ export default function IncomeGraph(props: IncomeGraphProps) {
             <div className="w-4 h-0.5 bg-blue-500 flex-shrink-0"></div>
             <span>{familyType === 'single-parent' ? 'Net income after tax and childcare' : 'Net household income increase after tax and childcare'}</span>
           </div>
-          {averageIncomePoint && (
+          {averageIncomePoint && (isUsingDefaultIncome ? shownMedianIncome === 'female' : true) && markerPositions.average && (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
               <span className="flex items-center flex-wrap gap-x-1">
                 {isUsingDefaultIncome ? (
                   <>
-                    Median full-time income for a woman in Sydney
+                    Median {shownMedianIncome === 'female' ? 'Female' : 'Male'} Full-Time Income (Sydney)
                     {onOpenSourceModal && (
-                      <button
-                        type="button"
-                        onClick={() => onOpenSourceModal('secondParentIncome')}
-                        className="text-blue-600 hover:text-blue-800 w-4 h-4 flex items-center justify-center flex-shrink-0"
-                        title="Why this income?"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setShownMedianIncome(shownMedianIncome === 'female' ? 'male' : 'female')}
+                          className="text-blue-600 hover:text-blue-800 text-xs leading-none px-1 py-0 border border-blue-300 rounded hover:bg-blue-50 align-middle"
+                          title={`Switch to ${shownMedianIncome === 'female' ? 'male' : 'female'} median`}
+                        >
+                          {shownMedianIncome === 'female' ? 'Show Male' : 'Show Female'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onOpenSourceModal(shownMedianIncome === 'female' ? 'secondParentIncome' : 'firstParentIncome')}
+                          className="text-blue-600 hover:text-blue-800 w-4 h-4 flex items-center justify-center flex-shrink-0"
+                          title="Why this income?"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </button>
+                      </>
                     )}
                   </>
                 ) : (
                   <>Second Parent Income</>
+                )}
+              </span>
+            </div>
+          )}
+          {maleMedianIncomePoint && isUsingDefaultIncome && shownMedianIncome === 'male' && markerPositions.maleMedian && (
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 rounded-full bg-blue-500 flex-shrink-0"></div>
+              <span className="flex items-center flex-wrap gap-x-1">
+                Median Male Full-Time Income (Sydney)
+                {onOpenSourceModal && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShownMedianIncome('female')}
+                      className="text-blue-600 hover:text-blue-800 text-xs leading-none px-1 py-0 border border-blue-300 rounded hover:bg-blue-50 align-middle"
+                      title="Switch to female median"
+                    >
+                      Show Female
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onOpenSourceModal('firstParentIncome')}
+                      className="text-blue-600 hover:text-blue-800 w-4 h-4 flex items-center justify-center flex-shrink-0"
+                      title="Why this income?"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </button>
+                  </>
                 )}
               </span>
             </div>
@@ -821,8 +913,8 @@ export default function IncomeGraph(props: IncomeGraphProps) {
           <div>
             <h3 className="font-semibold text-gray-900 mb-2">Axes</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
-              <li><strong>X-axis (horizontal):</strong> Shows the gross income {familyType === 'single-parent' ? '' : 'of the second parent'}.</li>
-              <li><strong>Y-axis (vertical):</strong> Shows the net income after tax and childcare costs.</li>
+              <li><strong>X-axis (horizontal):</strong> Shows the gross full-time salary {familyType === 'single-parent' ? '' : 'of the second parent'}.</li>
+              <li><strong>Y-axis (vertical):</strong> Shows the net income increase after tax and childcare costs.</li>
             </ul>
           </div>
           
@@ -842,7 +934,7 @@ export default function IncomeGraph(props: IncomeGraphProps) {
             <ul className="list-disc list-inside space-y-1 text-gray-700 ml-2">
               <li><strong>Amber horizontal line:</strong> The break-even point where net income equals $0 (household net income does not increase).</li>
               <li><strong>Red horizontal line:</strong> Full-time minimum wage after tax. This shows what a full-time minimum wage earner takes home after tax.</li>
-              <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? 'The median income for a woman in Sydney.' : 'The current income level.'}</li>
+              <li><strong>Blue dot:</strong> {isUsingDefaultIncome ? `Median ${shownMedianIncome === 'female' ? 'Female' : 'Male'} Full-Time Income (Sydney). You can toggle between female and male median using the button in the legend.` : 'The current income level.'}</li>
             </ul>
           </div>
           

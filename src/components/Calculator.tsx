@@ -9,6 +9,7 @@ import {
 } from '../utils/subsidyCalculations'
 import { calculateSecondParentScenario, type SecondParentScenario } from '../utils/advocacyCalculator'
 import { calculateMinimumWageAfterTaxForHours } from '../utils/graphData'
+import { calculateAfterTaxIncome } from '../utils/taxCalculations'
 import { getShareableUrl, decodeStateFromUrl } from '../utils/shareUtils'
 import IncomeGraph from './IncomeGraph'
 import HoursWorkedGraph from './HoursWorkedGraph'
@@ -296,11 +297,17 @@ export default function Calculator() {
       <div className="max-w-4xl mx-auto px-2 md:px-4 py-4 md:py-12">
         <header className="mb-3 md:mb-6 text-center">
           <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-3">
-            The Real Cost of Returning to Work
+            The 100-Hour Trap<br />
+            <span className="text-lg md:text-3xl">Why CCS Fails Full-Time Families</span>
           </h1>
-          <p className="text-sm md:text-xl text-gray-700 max-w-2xl mx-auto">
-            How much is childcare really costing?
-          </p>
+          <div className="text-xs md:text-base text-gray-600 max-w-3xl mx-auto px-2 md:px-4">
+            <p className="mb-2 md:mb-3">
+              The Child Care Subsidy (CCS) is capped at 100 hours per fortnight, but many centres operate on 11-hour+ daily sessions. This means 10 days of care often equals 110+ hours, leaving families paying full fees for those extra 10+ hours and often wiping out the financial benefit of working that 5th day.
+            </p>
+            <p className="text-gray-500 italic">
+              Scroll down to explore how childcare costs affect your family's net income, and use the sliders at the bottom to find the optimal configuration for your family.
+            </p>
+          </div>
         </header>
         
         <div id="income-graph" className="bg-white rounded-lg shadow-lg p-2 md:p-8 mb-3 md:mb-8">
@@ -364,14 +371,28 @@ export default function Calculator() {
                 </div>
               </div>
               {familyType === 'two-parent' && (
-                <div className="text-xs md:text-sm text-gray-600 space-y-1.5">
-                  <div className="flex justify-between items-baseline">
-                    <span className="min-w-[80px]">Work hours:</span>
-                    <span className="text-right font-medium">{firstParentHoursPerWeek}h/week</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-baseline pb-1 border-b border-gray-200">
+                    <span className="text-xs md:text-sm text-gray-600 min-w-[100px]">Work hours:</span>
+                    <span className="text-xs md:text-sm text-gray-600 text-right font-medium">{firstParentHoursPerWeek}h/week</span>
                   </div>
                   <div className="flex justify-between items-baseline">
-                    <span className="min-w-[80px]">Income:</span>
-                    <span className="text-right font-medium">${firstParentIncome.toLocaleString()}/year</span>
+                    <span className="text-xs md:text-sm text-gray-600 min-w-[100px]">Gross Income (before tax)</span>
+                    <span className="text-xs md:text-sm font-semibold text-gray-900 text-right">
+                      ${firstParentIncome.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs md:text-sm text-gray-600 min-w-[100px]">Tax</span>
+                    <span className="text-xs md:text-sm font-semibold text-gray-700 text-right">
+                      -${(firstParentIncome - calculateAfterTaxIncome(firstParentIncome)).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-xs md:text-sm text-gray-600 min-w-[100px]">Net Income (after tax)</span>
+                    <span className="text-sm md:text-base font-bold text-gray-900 text-right">
+                      ${calculateAfterTaxIncome(firstParentIncome).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               )}
@@ -530,15 +551,15 @@ export default function Calculator() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-baseline">
                             <span className="text-xs text-gray-600">Annual cost:</span>
-                            <span className="text-sm font-semibold text-gray-900">${Math.round(child.totalCost).toLocaleString()}</span>
+                            <span className="text-sm font-semibold text-red-600">-${Math.round(child.totalCost).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between items-baseline">
                             <span className="text-xs text-gray-600">Subsidy:</span>
-                            <span className="text-sm font-semibold text-gray-700">${Math.round(child.subsidyAmount).toLocaleString()}</span>
+                            <span className="text-sm font-semibold text-green-600">+${Math.round(child.subsidyAmount).toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between items-baseline border-t border-gray-200 pt-2">
                             <span className="text-xs font-medium text-gray-700">Out-of-pocket:</span>
-                            <span className="text-sm font-bold text-gray-900">${Math.round(child.outOfPocket).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-red-600">-${Math.round(child.outOfPocket).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -551,27 +572,27 @@ export default function Calculator() {
                   <div className="flex justify-between items-start">
                     <span className="min-w-[120px]">Total childcare cost:</span>
                     <div className="text-right">
-                      <div className="text-base md:text-xl font-semibold text-gray-900">${Math.round(breakdown.childcareCosts.totalAnnual).toLocaleString()}</div>
+                      <div className="text-base md:text-xl font-semibold text-red-600">-${Math.round(breakdown.childcareCosts.totalAnnual).toLocaleString()}</div>
                       {daysPerYearForParents > 0 && (
-                        <div className="text-gray-500 text-[10px]">${calculatePerDayForTotal(breakdown.childcareCosts.totalAnnual).toFixed(2)}/day</div>
+                        <div className="text-gray-500 text-[10px]">-${calculatePerDayForTotal(breakdown.childcareCosts.totalAnnual).toFixed(2)}/day</div>
                       )}
                     </div>
                   </div>
                   <div className="flex justify-between items-start">
                     <span className="min-w-[120px]">Total subsidy received:</span>
                     <div className="text-right">
-                      <div className="text-base md:text-xl font-semibold text-gray-700">${Math.round(breakdown.childcareCosts.totalSubsidy).toLocaleString()}</div>
+                      <div className="text-base md:text-xl font-semibold text-green-600">+${Math.round(breakdown.childcareCosts.totalSubsidy).toLocaleString()}</div>
                       {daysPerYearForParents > 0 && (
-                        <div className="text-gray-500 text-[10px]">${calculatePerDayForTotal(breakdown.childcareCosts.totalSubsidy).toFixed(2)}/day</div>
+                        <div className="text-gray-500 text-[10px]">+${calculatePerDayForTotal(breakdown.childcareCosts.totalSubsidy).toFixed(2)}/day</div>
                       )}
                     </div>
                   </div>
                   <div className="flex justify-between items-start">
                     <span className="min-w-[120px]">Out-of-pocket cost:</span>
                     <div className="text-right">
-                      <div className="text-xl md:text-3xl font-bold text-orange-700">${Math.round(breakdown.childcareCosts.outOfPocketAnnual).toLocaleString()}</div>
+                      <div className="text-xl md:text-3xl font-bold text-red-600">-${Math.round(breakdown.childcareCosts.outOfPocketAnnual).toLocaleString()}</div>
                       {daysPerYearForParents > 0 && (
-                        <div className="text-gray-500 text-[10px] font-normal">${calculatePerDayForTotal(breakdown.childcareCosts.outOfPocketAnnual).toFixed(2)}/day</div>
+                        <div className="text-gray-500 text-[10px] font-normal">-${calculatePerDayForTotal(breakdown.childcareCosts.outOfPocketAnnual).toFixed(2)}/day</div>
                       )}
                     </div>
                   </div>
@@ -617,7 +638,7 @@ export default function Calculator() {
               The Diminishing Returns of Working More Days
             </h2>
             <p className="text-xs md:text-base text-gray-600">
-              As income increases, the subsidy percentage decreases. Once families hit the 100-hour per fortnight cap, extra hours aren't subsidized, so each additional day brings less net income.
+              As income increases, the subsidy percentage decreases. Once families hit the 100-hour per fortnight cap, extra hours aren't subsidised, so each additional day brings less net income.
             </p>
           </div>
           <HoursWorkedGraph
@@ -714,14 +735,24 @@ export default function Calculator() {
             <strong>$94,103/year</strong> is the calculated median income for full-time female employees in Greater Sydney.
           </p>
           <p className="text-gray-700">
-            The ABS doesn't publish this figure directly for Greater Sydney. It is calculated by adjusting the NSW median ($1,700/week) using the Greater Sydney to NSW earnings ratio, resulting in $1,809.67/week ($94,103/year).
+            The ABS doesn't publish this figure directly for Greater Sydney. It is calculated by adjusting the NSW median for full-time female employees ($1,700/week) using the Greater Sydney to NSW earnings ratio of 1.0645, resulting in $1,809.67/week ($94,103/year).
           </p>
-          <p className="text-sm text-gray-600">
-            <a href="https://www.abs.gov.au/statistics/labour/earnings-and-working-conditions/characteristics-employment-australia/aug-2024" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-              Source: ABS Characteristics of Employment (August 2024)
-            </a>
-                  </p>
-                </div>
+          <p className="text-gray-700">
+            We default to the female median income for the parent returning to work because mothers typically take more parental leave than fathers and are often the parent returning to work after paid parental leave ends. The median female salary is also lower than the median male salary, which means many families find that when one parent reduces work hours, it's often the lower-earning parent who does so.
+          </p>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              <strong>Sources:</strong>
+            </p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>
+                <a href="https://www.abs.gov.au/statistics/labour/earnings-and-working-conditions/characteristics-employment-australia/aug-2024" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  ABS Characteristics of Employment (August 2024)
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
       </SourceModal>
 
       <SourceModal
@@ -734,13 +765,23 @@ export default function Calculator() {
             <strong>$104,496/year</strong> is the calculated median income for full-time male employees in Greater Sydney.
           </p>
           <p className="text-gray-700">
-            The ABS doesn't publish this figure directly for Greater Sydney. It is calculated by adjusting the NSW median ($1,891.33/week) using the Greater Sydney to NSW earnings ratio, resulting in $2,009.54/week ($104,496/year).
+            The ABS doesn't publish this figure directly for Greater Sydney. It is calculated by adjusting the NSW median for full-time male employees ($1,891.33/week) using the Greater Sydney to NSW earnings ratio of 1.0625, resulting in $2,009.54/week ($104,496/year).
           </p>
-          <p className="text-sm text-gray-600">
-            <a href="https://www.abs.gov.au/statistics/labour/earnings-and-working-conditions/characteristics-employment-australia/aug-2024" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-              Source: ABS Characteristics of Employment (August 2024)
-            </a>
+          <p className="text-gray-700">
+            We default to the higher median income (male) for the already working parent because, due to the gender pay gap, many families find that when one parent reduces work hours, it's often the lower-earning parent who does so. This is also consistent with patterns where mothers typically take more parental leave than fathers.
           </p>
+          <div className="text-sm text-gray-600 space-y-2">
+            <p>
+              <strong>Sources:</strong>
+            </p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>
+                <a href="https://www.abs.gov.au/statistics/labour/earnings-and-working-conditions/characteristics-employment-australia/aug-2024" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  ABS Characteristics of Employment (August 2024)
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </SourceModal>
 

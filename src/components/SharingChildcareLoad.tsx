@@ -13,6 +13,7 @@ import {
 import { Bar } from 'react-chartjs-2'
 import { calculateAfterTaxIncome, calculateIncomeTax } from '../utils/taxCalculations'
 import { calculateTotalCosts, type Child } from '../utils/subsidyCalculations'
+import { MINIMUM_WAGE_POST_TAX_HOURLY_RATE } from '../utils/graphData'
 
 ChartJS.register(
   CategoryScale,
@@ -332,9 +333,9 @@ export default function SharingChildcareLoad({
     ? secondParentNetBenefitPerExtraDay / HOURS_PER_YEAR_FOR_ONE_EXTRA_DAY
     : 0
   
-  // Australian minimum wage after tax (approximate)
-  // Minimum wage is $23.23/hour gross, after tax at 19% (first bracket) ≈ $18.82/hour
-  const MINIMUM_WAGE_AFTER_TAX = 23.23 * 0.81 // Approximately $18.82/hour
+  // Australian minimum wage after tax (2025-26 rate: $24.95/hour gross)
+  // Use the correct hourly rate from graphData.ts which accounts for proper tax calculation
+  const MINIMUM_WAGE_AFTER_TAX = MINIMUM_WAGE_POST_TAX_HOURLY_RATE
   
   // Calculate combined effective hourly rate if both parents worked additional days to reach full-time
   const totalAdditionalHours = firstParentHoursNotInPaidWork + secondParentHoursNotInPaidWork
@@ -698,35 +699,40 @@ export default function SharingChildcareLoad({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Lost income (vs full-time):</span>
-                  <span className="font-medium text-gray-900">
-                    ${Math.round(firstParentLostIncomeAfterTax).toLocaleString()}
+                  <span className="text-gray-600">Income Difference (vs 5 days):</span>
+                  <span className="font-medium text-red-600">
+                    -${Math.round(Math.abs(firstParentLostIncomeAfterTax)).toLocaleString()}
                   </span>
                 </div>
                 <div className="pl-4 text-xs text-gray-500">
                   <div className="flex justify-between">
                     <span>Gross:</span>
-                    <span>${Math.round(firstParentLostIncomeGross).toLocaleString()}</span>
+                    <span className="text-red-600">-${Math.round(Math.abs(firstParentLostIncomeGross)).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax saved:</span>
-                    <span>${Math.round(firstParentTaxSaved).toLocaleString()}</span>
+                    <span className="text-green-600">+${Math.round(firstParentTaxSaved).toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Saved childcare:</span>
                   <span className="font-medium text-green-700">
-                    ${Math.round(firstParentSavedChildcare).toLocaleString()}
+                    +${Math.round(firstParentSavedChildcare).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-2">
                   <span className="font-semibold text-gray-900">
-                    {firstParentNetCost >= 0 ? 'Net cost vs full-time:' : 'Net benefit vs full-time:'}
+                    Income difference (vs 5 days):
                   </span>
                   <span className={`font-bold ${firstParentNetCost >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ${Math.round(Math.abs(firstParentNetCost)).toLocaleString()}
+                    {firstParentNetCost >= 0 ? '-' : '+'}${Math.round(Math.abs(firstParentNetCost)).toLocaleString()}
                   </span>
                 </div>
+                {firstParentNetCost < 0 && (
+                  <p className="text-xs text-green-600 mt-1 italic text-right">
+                    Working 4 days actually results in a higher net income.
+                  </p>
+                )}
                 {firstParentDaysToAdd > 0 && (
                   <div className="border-t-2 border-gray-300 pt-3 mt-3">
                     <p className="text-xs md:text-sm text-gray-600 mb-3">
@@ -788,35 +794,40 @@ export default function SharingChildcareLoad({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Lost income (vs full-time):</span>
-                  <span className="font-medium text-gray-900">
-                    ${Math.round(secondParentLostIncomeAfterTax).toLocaleString()}
+                  <span className="text-gray-600">Income Difference (vs 5 days):</span>
+                  <span className="font-medium text-red-600">
+                    -${Math.round(Math.abs(secondParentLostIncomeAfterTax)).toLocaleString()}
                   </span>
                 </div>
                 <div className="pl-4 text-xs text-gray-500">
                   <div className="flex justify-between">
                     <span>Gross:</span>
-                    <span>${Math.round(secondParentLostIncomeGross).toLocaleString()}</span>
+                    <span className="text-red-600">-${Math.round(Math.abs(secondParentLostIncomeGross)).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax saved:</span>
-                    <span>${Math.round(secondParentTaxSaved).toLocaleString()}</span>
+                    <span className="text-green-600">+${Math.round(secondParentTaxSaved).toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Saved childcare:</span>
                   <span className="font-medium text-green-700">
-                    ${Math.round(secondParentSavedChildcare).toLocaleString()}
+                    +${Math.round(secondParentSavedChildcare).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-2">
                   <span className="font-semibold text-gray-900">
-                    {secondParentNetCost >= 0 ? 'Net cost vs full-time:' : 'Net benefit vs full-time:'}
+                    Income difference (vs 5 days):
                   </span>
                   <span className={`font-bold ${secondParentNetCost >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    ${Math.round(Math.abs(secondParentNetCost)).toLocaleString()}
+                    {secondParentNetCost >= 0 ? '-' : '+'}${Math.round(Math.abs(secondParentNetCost)).toLocaleString()}
                   </span>
                 </div>
+                {secondParentNetCost < 0 && (
+                  <p className="text-xs text-green-600 mt-1 italic text-right">
+                    Working 4 days actually results in a higher net income.
+                  </p>
+                )}
                 {secondParentDaysToAdd > 0 && (
                   <div className="border-t-2 border-gray-300 pt-3 mt-3">
                     <p className="text-xs md:text-sm text-gray-600 mb-3">
@@ -894,18 +905,18 @@ export default function SharingChildcareLoad({
               <p className="text-xs text-gray-600 mb-3">Compared to both parents working full-time (5 days each)</p>
               <div className="space-y-2 text-xs md:text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total lost income (vs full-time):</span>
-                  <span className="font-medium text-gray-900">
-                    ${Math.round(
+                  <span className="text-gray-600">Total Income Difference (vs 5 days):</span>
+                  <span className="font-medium text-red-600">
+                    -${Math.round(Math.abs(
                       (firstParentDays < 5 ? firstParentLostIncomeAfterTax : 0) +
                       (secondParentDays < 5 ? secondParentLostIncomeAfterTax : 0)
-                    ).toLocaleString()}
+                    )).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total saved childcare (vs full-time):</span>
                   <span className="font-medium text-green-700">
-                    ${Math.round(
+                    +${Math.round(
                       (firstParentDays < 5 ? firstParentSavedChildcare : 0) +
                       (secondParentDays < 5 ? secondParentSavedChildcare : 0) +
                       (daysCoveredByNonParents > 0 ? familySupportSavedChildcare : 0)
@@ -920,15 +931,25 @@ export default function SharingChildcareLoad({
                     return (
                       <>
                         <span className="font-semibold text-gray-900">
-                          {totalNetCost >= 0 ? 'Total net cost vs full-time:' : 'Total net benefit vs full-time:'}
+                          Total income difference (vs 5 days):
                         </span>
                         <span className={`font-bold text-lg ${totalNetCost >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                          ${Math.round(Math.abs(totalNetCost)).toLocaleString()}
+                          {totalNetCost >= 0 ? '-' : '+'}${Math.round(Math.abs(totalNetCost)).toLocaleString()}
                         </span>
                       </>
                     )
                   })()}
                 </div>
+                {(() => {
+                  const totalNetCost = (firstParentDays < 5 ? firstParentNetCost : 0) +
+                    (secondParentDays < 5 ? secondParentNetCost : 0) -
+                    (daysCoveredByNonParents > 0 ? familySupportSavedChildcare : 0)
+                  return totalNetCost < 0 ? (
+                    <p className="text-xs text-green-600 mt-1 italic text-right">
+                      Working 4 days actually results in a higher net income.
+                    </p>
+                  ) : null
+                })()}
               </div>
             </div>
           )}
