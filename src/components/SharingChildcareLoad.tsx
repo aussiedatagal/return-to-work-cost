@@ -490,6 +490,16 @@ export default function SharingChildcareLoad({
           <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Parent 1</h3>
           
           <div className="mb-3">
+            <div className="pl-2 border-l-2 border-gray-300 space-y-1 text-xs mb-2">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Gross:</span>
+                <span className="text-gray-700">${Math.round(firstParentFTEIncome).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tax:</span>
+                <span className="text-gray-700">-${Math.round(firstParentFTEIncome - calculateAfterTaxIncome(firstParentFTEIncome)).toLocaleString()}</span>
+              </div>
+            </div>
             <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600">Net full-time income:</span>
               <span className="font-semibold text-gray-900">
@@ -518,6 +528,16 @@ export default function SharingChildcareLoad({
               <span>5</span>
             </div>
             <div className="mt-3 space-y-1">
+              <div className="pl-2 border-l-2 border-gray-300 space-y-1 text-xs mb-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Gross:</span>
+                  <span className="text-gray-700">${Math.round(firstParentProRataIncome).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Tax:</span>
+                  <span className="text-gray-700">-${Math.round(firstParentProRataIncome - calculateAfterTaxIncome(firstParentProRataIncome)).toLocaleString()}</span>
+                </div>
+              </div>
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Net pro-rata income:</span>
                 <span className="font-semibold text-gray-900">
@@ -533,6 +553,16 @@ export default function SharingChildcareLoad({
           <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-2">Parent 2</h3>
           
           <div className="mb-3">
+            <div className="pl-2 border-l-2 border-gray-300 space-y-1 text-xs mb-2">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Gross:</span>
+                <span className="text-gray-700">${Math.round(secondParentFTEIncome).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Tax:</span>
+                <span className="text-gray-700">-${Math.round(secondParentFTEIncome - calculateAfterTaxIncome(secondParentFTEIncome)).toLocaleString()}</span>
+              </div>
+            </div>
             <div className="flex justify-between text-xs md:text-sm">
               <span className="text-gray-600">Net full-time income:</span>
               <span className="font-semibold text-gray-900">
@@ -561,6 +591,16 @@ export default function SharingChildcareLoad({
               <span>5</span>
             </div>
             <div className="mt-3 space-y-1">
+              <div className="pl-2 border-l-2 border-gray-300 space-y-1 text-xs mb-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Gross:</span>
+                  <span className="text-gray-700">${Math.round(secondParentProRataIncome).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Tax:</span>
+                  <span className="text-gray-700">-${Math.round(secondParentProRataIncome - calculateAfterTaxIncome(secondParentProRataIncome)).toLocaleString()}</span>
+                </div>
+              </div>
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Net pro-rata income:</span>
                 <span className="font-semibold text-gray-900">
@@ -575,7 +615,7 @@ export default function SharingChildcareLoad({
       {/* Days Covered by Non-Parents */}
       <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
         <h3 className="text-xs md:text-sm font-semibold text-gray-900 mb-1">Support network care days</h3>
-        <p className="text-xs text-gray-600 mb-2">Some families are fortunate enough to have a support network willing to look after children while the parents are working. This input configures the number of days that families don't need childcare for even though they're working. For example, if a grandparent or other family member cares for the children.</p>
+        <p className="text-xs text-gray-600 mb-2">If you have free care (e.g., Grandparents) on work days, enter those days here.</p>
         <div>
           <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
             Days per week
