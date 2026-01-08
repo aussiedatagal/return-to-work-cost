@@ -12,3 +12,14 @@ vi.mock('react-chartjs-2', () => ({
   }),
 }))
 
+// Mock IntersectionObserver since it's not available in jsdom
+globalThis.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return []
+  }
+  unobserve() {}
+} as any
+

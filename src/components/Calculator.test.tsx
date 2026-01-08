@@ -7,7 +7,8 @@ describe('Calculator', () => {
   it('renders the main heading', () => {
     render(<Calculator />)
     
-    expect(screen.getByText(/the real cost of returning to work/i)).toBeInTheDocument()
+    expect(screen.getByText(/The 100-Hour Trap/i)).toBeInTheDocument()
+    expect(screen.getByText(/Why CCS Fails Full-Time Families/i)).toBeInTheDocument()
   })
 
   it('renders income display sections', () => {
