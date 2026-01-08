@@ -19,7 +19,7 @@ The interactive graph shows how net household income increases as the second par
 
 ## Features
 
-- **Interactive Income Graph**: Visualize net income after tax and childcare costs
+- **Interactive Income Graph**: Visualise net income after tax and childcare costs
 - **Break-even Point**: See exactly when returning to work becomes financially viable
 - **Minimum Wage Equivalent**: Compare net income to minimum wage after deductions
 - **Comprehensive CCS Calculation**: 
@@ -29,7 +29,7 @@ The interactive graph shows how net household income increases as the second par
   - Age-based hourly rate caps
   - Customizable childcare hours and rates
 - **Detailed Breakdown**: See exactly where your money goes
-- **Mobile-first Design**: Optimized for mobile devices
+- **Mobile-first Design**: Optimisd for mobile devices
 
 ## How It Works
 
