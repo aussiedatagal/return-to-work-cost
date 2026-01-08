@@ -15,6 +15,7 @@ import IncomeGraph from './IncomeGraph'
 import HoursWorkedGraph from './HoursWorkedGraph'
 import SharingChildcareLoad from './SharingChildcareLoad'
 import SourceModal from './SourceModal'
+import SectionProgressTracker from './SectionProgressTracker'
 
 // Based on ABS Characteristics of Employment (released Aug 2024, data to Aug 2024)
 // NSW median full-time female: $1,700/week
@@ -294,6 +295,7 @@ export default function Calculator() {
   
   return (
     <div className="min-h-screen bg-gray-50">
+      <SectionProgressTracker />
       <div className="max-w-4xl mx-auto px-2 md:px-4 py-4 md:py-12">
         <header className="mb-3 md:mb-6 text-center">
           <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-3">
@@ -327,7 +329,7 @@ export default function Calculator() {
           />
         </div>
         
-        <div className="bg-white rounded-lg shadow-lg p-2.5 md:p-8 mb-3 md:mb-8">
+        <div id="detailed-breakdown" className="bg-white rounded-lg shadow-lg p-2.5 md:p-8 mb-3 md:mb-8">
           <div className="text-center mb-3 md:mb-6">
             <h2 className="text-base md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">
               Detailed Breakdown
@@ -654,14 +656,16 @@ export default function Calculator() {
         </div>
         
         {familyType === 'two-parent' && (
-          <SharingChildcareLoad
-            firstParentIncome={firstParentIncome}
-            firstParentHoursPerWeek={firstParentHoursPerWeek}
-            secondParentIncome={selectedSecondParentIncome}
-            secondParentHoursPerWeek={secondParentHoursPerWeek}
-            children={children}
-            familyType={familyType}
-          />
+          <div id="sharing-load">
+            <SharingChildcareLoad
+              firstParentIncome={firstParentIncome}
+              firstParentHoursPerWeek={firstParentHoursPerWeek}
+              secondParentIncome={selectedSecondParentIncome}
+              secondParentHoursPerWeek={secondParentHoursPerWeek}
+              children={children}
+              familyType={familyType}
+            />
+          </div>
         )}
         
         <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 md:p-8 mb-6 md:mb-8">
