@@ -157,8 +157,13 @@ export default function SharingChildcareLoad({
   // Each parent can cover days they're not working
   const totalDaysCoveredByParents = Math.min(daysCoveredByParents + daysCoveredBySecondParent, totalDaysNeeded)
   // Total days covered includes both parents and non-parents (grandparents/family)
+  // If support network covers all 5 days, childcare days needed is always 0 regardless of parent work days
   const totalDaysCovered = Math.min(totalDaysCoveredByParents + daysCoveredByNonParents, totalDaysNeeded)
-  const childcareDaysNeeded = Math.max(0, totalDaysNeeded - totalDaysCovered)
+  // Explicitly ensure that if support network covers all days, childcare days needed is 0
+  // This prevents incorrect calculations when parents work more days but support network already covers all days
+  const childcareDaysNeeded = daysCoveredByNonParents >= totalDaysNeeded 
+    ? 0 
+    : Math.max(0, totalDaysNeeded - totalDaysCovered)
   
   // Calculate hours per week for activity test
   // Activity test uses the minimum of both parents' hours (for two-parent families)
@@ -181,7 +186,11 @@ export default function SharingChildcareLoad({
   
   // Calculate childcare costs for full-time scenario (both parents full-time)
   // Use the same family support days as the part-time scenario for fair comparison
+  // When both parents work full-time (5 days each), they can't cover any days themselves
+  // So childcare days needed = 5 - support network days (same logic as part-time but parents cover 0 days)
   const fullTimeCombinedIncome = firstParentFTEIncome + secondParentFTEIncome
+  // Full-time: both parents work 5 days, so they cover 0 days themselves
+  // Only support network days matter: childcare days = 5 - support network days
   const fullTimeChildcareDaysNeeded = Math.max(0, 5 - daysCoveredByNonParents)
   const fullTimeChildren = children.map(child => ({
     ...child,
@@ -689,8 +698,15 @@ export default function SharingChildcareLoad({
               </div>
               <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-gray-600">Subsidy received:</span>
-                <span className="font-medium text-gray-700">
-                  ${Math.round(partTimeCosts.totalChildcareSubsidy * 26).toLocaleString()}
+                <span className="font-medium text-gray-700 text-right">
+                  <div>${Math.round(partTimeCosts.totalChildcareSubsidy * 26).toLocaleString()}</div>
+                  {partTimeCosts.childDetails.length > 0 && (
+                    <div className="text-xs text-gray-500">
+                      ({partTimeCosts.childDetails.map((child) => 
+                        `${child.subsidyPercent.toFixed(0)}%`
+                      ).join('/')})
+                    </div>
+                  )}
                 </span>
               </div>
               <div className="flex justify-between text-xs md:text-sm border-t border-gray-200 pt-2">
@@ -771,8 +787,15 @@ export default function SharingChildcareLoad({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Childcare subsidy:</span>
-                <span className="font-medium text-green-700">
-                  +${Math.round(partTimeCosts.totalChildcareSubsidy * 26).toLocaleString()}/year
+                <span className="font-medium text-green-700 text-right">
+                  <div>+${Math.round(partTimeCosts.totalChildcareSubsidy * 26).toLocaleString()}/year</div>
+                  {partTimeCosts.childDetails.length > 0 && (
+                    <div className="text-xs text-gray-500">
+                      ({partTimeCosts.childDetails.map((child) => 
+                        `${child.subsidyPercent.toFixed(0)}%`
+                      ).join('/')})
+                    </div>
+                  )}
                 </span>
               </div>
               <div className="flex justify-between border-t border-gray-200 pt-1">
@@ -819,11 +842,7 @@ export default function SharingChildcareLoad({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Saved childcare (vs full-time):</span>
                   <span className="font-medium text-green-700">
-                    +${Math.round(
-                      (firstParentDays < 5 ? firstParentSavedChildcare : 0) +
-                      (secondParentDays < 5 ? secondParentSavedChildcare : 0) +
-                      (daysCoveredByNonParents > 0 ? familySupportSavedChildcare : 0)
-                    ).toLocaleString()}
+                    +${Math.round(totalChildcareSavings).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between border-t border-blue-200 pt-2">
@@ -835,8 +854,7 @@ export default function SharingChildcareLoad({
                 <div className="flex justify-between border-t-2 border-blue-200 pt-2">
                   {(() => {
                     const totalNetCost = (firstParentDays < 5 ? firstParentNetCost : 0) +
-                      (secondParentDays < 5 ? secondParentNetCost : 0) -
-                      (daysCoveredByNonParents > 0 ? familySupportSavedChildcare : 0)
+                      (secondParentDays < 5 ? secondParentNetCost : 0)
                     return (
                       <>
                         <span className="font-semibold text-gray-900">
@@ -851,8 +869,7 @@ export default function SharingChildcareLoad({
                 </div>
                 {(() => {
                   const totalNetCost = (firstParentDays < 5 ? firstParentNetCost : 0) +
-                    (secondParentDays < 5 ? secondParentNetCost : 0) -
-                    (daysCoveredByNonParents > 0 ? familySupportSavedChildcare : 0)
+                    (secondParentDays < 5 ? secondParentNetCost : 0)
                   return totalNetCost < 0 ? (
                     <p className="text-xs text-green-600 mt-1 italic text-right">
                       Working part-time actually results in a higher net income.
@@ -971,7 +988,7 @@ export default function SharingChildcareLoad({
                       )}
                       {firstParentEffectiveHourlyRate >= 0 && firstParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
                         <p className="text-xs text-orange-600 mt-1 text-right">
-                          Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                          Working an extra {firstParentDaysToAdd} day{firstParentDaysToAdd !== 1 ? 's' : ''} results in earnings below minimum wage for those days (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
                         </p>
                       )}
                     </div>
@@ -1066,7 +1083,7 @@ export default function SharingChildcareLoad({
                       )}
                       {secondParentEffectiveHourlyRate >= 0 && secondParentEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
                         <p className="text-xs text-orange-600 mt-1 text-right">
-                          Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                          Working an extra {secondParentDaysToAdd} day{secondParentDaysToAdd !== 1 ? 's' : ''} results in earnings below minimum wage for those days (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
                         </p>
                       )}
                     </div>
@@ -1157,7 +1174,7 @@ export default function SharingChildcareLoad({
                 )}
                 {combinedEffectiveHourlyRate >= 0 && combinedEffectiveHourlyRate < MINIMUM_WAGE_AFTER_TAX && (
                   <p className="text-xs text-orange-600 mt-1 text-right">
-                    Working full time results in earnings below minimum wage (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
+                    Working an extra {firstParentDaysToAdd + secondParentDaysToAdd} day{(firstParentDaysToAdd + secondParentDaysToAdd) !== 1 ? 's' : ''} results in earnings below minimum wage for those days (${MINIMUM_WAGE_AFTER_TAX.toFixed(2)}/h after tax)
                   </p>
                 )}
               </>
