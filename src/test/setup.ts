@@ -22,4 +22,3 @@ globalThis.IntersectionObserver = class IntersectionObserver {
   }
   unobserve() {}
 } as any
-
