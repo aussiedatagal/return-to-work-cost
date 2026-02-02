@@ -270,4 +270,3 @@ export function findMaxIncomePoint(
     current.netIncome > max.netIncome ? current : max
   )
 }
-

@@ -299,8 +299,8 @@ export default function Calculator() {
       <div className="max-w-4xl mx-auto px-2 md:px-4 py-4 md:py-12">
         <header className="mb-3 md:mb-6 text-center">
           <h1 className="text-xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-3">
-            The 100-Hour Trap<br />
-            <span className="text-lg md:text-3xl">Why CCS Fails Full-Time Families</span>
+            CCS Estimator<br />
+            <span className="text-lg md:text-3xl">Child Care Subsidy cost calculator</span>
           </h1>
           <div className="text-xs md:text-base text-gray-600 max-w-3xl mx-auto px-2 md:px-4">
             <p className="mb-2 md:mb-3">
@@ -731,6 +731,9 @@ export default function Calculator() {
         </div>
         
         <footer className="mt-12 pt-8 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-500 max-w-2xl mx-auto mb-3 px-4">
+            This calculator is provided for general guidance only and may contain errors. Do not rely on it as your sole source, confirm results with your own calculations.
+          </p>
           <p className="text-xs text-gray-400">
             <a 
               href="https://aussiedatagal.github.io" 
